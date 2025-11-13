@@ -9,7 +9,7 @@ import {
 } from "@material-tailwind/react";
 import { useMaterialTailwindController, setOpenSidenav } from "@/context";
 import { useDispatch } from "react-redux";
-import { logout } from "../../store/slices/doctorSlice";
+import { logout } from "../../store/slices/adminSlice";
 
 export function Sidenav({ brandImg, brandName, routes }) {
   const [controller, dispatch] = useMaterialTailwindController();

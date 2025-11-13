@@ -1,11 +1,11 @@
 // store.js (updated to include planReducer)
 import { configureStore } from "@reduxjs/toolkit";
-import doctorReducer from "./slices/doctorSlice";
+import adminReducer from "./slices/adminSlice";
 import planReducer from "./slices/planSlice";
 
 export const store = configureStore({
   reducer: {
-    doctor: doctorReducer,
+    admin: adminReducer,
     plan: planReducer,
   },
 });

@@ -1,12 +1,12 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Dashboard, Auth } from "@/layouts";
 import { useDispatch, useSelector } from "react-redux";
-import { getdoctor } from "./store/slices/doctorSlice";
+import { getadmin } from "./store/slices/adminSlice";
 import { useEffect } from "react";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useSelector((state) => state.doctor);
+  const { isAuthenticated } = useSelector((state) => state.admin);
   
   if (!isAuthenticated) {
     return <Navigate to="/auth/sign-in" replace />;
@@ -17,7 +17,7 @@ const ProtectedRoute = ({ children }) => {
 
 // Public Route Component (for authentication pages)
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated } = useSelector((state) => state.doctor);
+  const { isAuthenticated } = useSelector((state) => state.admin);
   
   if (isAuthenticated) {
     return <Navigate to="/dashboard/home" replace />;
@@ -31,7 +31,7 @@ function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(getdoctor());
+    dispatch(getadmin());
   }, []);
 
 

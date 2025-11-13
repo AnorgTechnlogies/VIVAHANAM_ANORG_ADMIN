@@ -27,7 +27,7 @@ import { useSelector } from 'react-redux';
 import AdminImg from "../../../public/img/dummy-image.jpg"
 
 export function Profile(){
-  const { doctor } = useSelector((state) => state.doctor);
+  const { admin } = useSelector((state) => state.admin);
   
   return (
     <div className="relative mt-8 h-full w-full">
@@ -47,7 +47,7 @@ export function Profile(){
               <div className="flex flex-col items-center justify-center h-full relative z-10">
                 <Avatar
                   size="xxl"
-                  src={doctor?.adminImagelink?.url || AdminImg}
+                  src={admin?.adminImagelink?.url || AdminImg}
                   alt="profile-picture"
                   className="ring-4 ring-white h-32 w-32 shadow-2xl"
                 />
@@ -55,7 +55,7 @@ export function Profile(){
             </CardHeader>
             <CardBody className="text-center">
               <Typography variant="h4" className="mb-2 text-red-700 font-bold">
-                {doctor?.adminName || "Admin Name"}
+                {admin?.adminName || "Admin Name"}
               </Typography>
               <div className="inline-flex items-center gap-2 px-4 py-1 bg-amber-100 rounded-full mb-4">
                 <ShieldCheckIcon className="h-4 w-4 text-red-700" />
@@ -75,7 +75,7 @@ export function Profile(){
                   </div>
                   <div className="text-left flex-1">
                     <Typography className="text-xs text-gray-600 font-semibold">Email</Typography>
-                    <Typography className="text-sm text-red-700">{doctor?.adminEmailId}</Typography>
+                    <Typography className="text-sm text-red-700">{admin?.adminEmailId}</Typography>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-amber-100 hover:bg-amber-200 transition-colors">
@@ -84,7 +84,7 @@ export function Profile(){
                   </div>
                   <div className="text-left flex-1">
                     <Typography className="text-xs text-gray-600 font-semibold">Phone</Typography>
-                    <Typography className="text-sm text-red-700">{doctor?.adminMobileNo || "Not provided"}</Typography>
+                    <Typography className="text-sm text-red-700">{admin?.adminMobileNo || "Not provided"}</Typography>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-amber-100 hover:bg-amber-200 transition-colors">
@@ -93,7 +93,7 @@ export function Profile(){
                   </div>
                   <div className="text-left flex-1">
                     <Typography className="text-xs text-gray-600 font-semibold">Location</Typography>
-                    <Typography className="text-sm text-red-700">{doctor?.adminLocation || "Location not set"}</Typography>
+                    <Typography className="text-sm text-red-700">{admin?.adminLocation || "Location not set"}</Typography>
                   </div>
                 </div>
               </div>
@@ -136,7 +136,7 @@ export function Profile(){
                           Email Address
                         </Typography>
                       </div>
-                      <Typography className="text-red-700 font-medium">{doctor?.adminEmailId}</Typography>
+                      <Typography className="text-red-700 font-medium">{admin?.adminEmailId}</Typography>
                     </div>
                     
                     <div className="p-5 bg-amber-100 rounded-xl shadow-sm border-l-4 border-amber-600 hover:shadow-md transition-shadow">
@@ -146,7 +146,7 @@ export function Profile(){
                           Mobile Number
                         </Typography>
                       </div>
-                      <Typography className="text-red-700 font-medium">{doctor?.adminMobileNo || "Not provided"}</Typography>
+                      <Typography className="text-red-700 font-medium">{admin?.adminMobileNo || "Not provided"}</Typography>
                     </div>
                     
                     <div className="p-5 bg-amber-100 rounded-xl shadow-sm border-l-4 border-amber-600 hover:shadow-md transition-shadow md:col-span-2">
@@ -156,7 +156,7 @@ export function Profile(){
                           Location
                         </Typography>
                       </div>
-                      <Typography className="text-red-700 font-medium">{doctor?.adminLocation || "Not provided"}</Typography>
+                      <Typography className="text-red-700 font-medium">{admin?.adminLocation || "Not provided"}</Typography>
                     </div>
                   </div>
                 </div>

@@ -18,6 +18,8 @@ import TestimonialAdmin from "./pages/dashboard/TestimonialAdmin";
 import Blog from "./pages/dashboard/Blog";
 import FaqPage from "./pages/dashboard/FaqPage";
 import ContactUs from "./pages/dashboard/ContactUs";
+import AdminUsersDashboard from "./pages/dashboard/UserInfo";
+
 
 
 const icon = {
@@ -34,6 +36,14 @@ export const routes = [
         path: "/home",
         element: <Home />,
       },
+
+{
+        icon: <UserCircleIcon {...icon} />,
+        name: "User Information",
+        path: "/userinfo",
+        element: <AdminUsersDashboard />,
+      },
+
       {
         icon: <UserCircleIcon {...icon} />,
         name: "profile",
