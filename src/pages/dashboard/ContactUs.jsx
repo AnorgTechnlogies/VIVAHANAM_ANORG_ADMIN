@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Search, Mail, Phone, MessageSquare, Calendar, Trash2, X, AlertCircle, RefreshCw } from "lucide-react";
 
-const API_BASE = "/api/admin";
+const BASE_URL = import.meta.env.VITE_API_KEY;
+
 
 const ContactusDetails = () => {
   const [submissions, setSubmissions] = useState([]);
@@ -24,7 +25,7 @@ const ContactusDetails = () => {
         ?.split("=")[1]
         ?.replace("Bearer ", "");
 
-      const res = await fetch(`${API_BASE}/contact-submissions`, {
+      const res = await fetch(`${BASE_URL}/contact-submissions`, {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
@@ -54,7 +55,7 @@ const ContactusDetails = () => {
         ?.split("=")[1]
         ?.replace("Bearer ", "");
 
-      const res = await fetch(`${API_BASE}/contact-submissions/${id}`, {
+      const res = await fetch(`${BASE_URL}/contact-submissions/${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` },
       });

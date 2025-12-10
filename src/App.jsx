@@ -19,6 +19,8 @@ const ProtectedRoute = ({ children }) => {
 const PublicRoute = ({ children }) => {
   const { isAuthenticated } = useSelector((state) => state.admin);
   
+  // Only redirect to dashboard if user is authenticated
+  // Allow access to auth pages even after successful registration
   if (isAuthenticated) {
     return <Navigate to="/dashboard/home" replace />;
   }
@@ -27,13 +29,11 @@ const PublicRoute = ({ children }) => {
 };
 
 function App() {
-
   const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(getadmin());
-  }, []);
-
+  }, [dispatch]);
 
   return (
     <Routes>
@@ -64,9 +64,7 @@ function App() {
           <Navigate to="/auth/sign-in" replace />
         }
       />
-      
     </Routes>
-    
   );
 }
 

@@ -1,5 +1,6 @@
-export * from "@/pages/dashboard/home";
-export * from "@/pages/dashboard/profile";
-export * from "@/pages/dashboard/notifications";
-export * from "@/pages/dashboard/Blog";
-export * from "@/pages/dashboard/ContactUs";
+// src/pages/dashboard/index.js
+export { default as Home } from "./Home";
+export { default as Profile } from "./Profile";
+export { default as Blog } from "./Blog";
+export { default as ContactUs } from "./ContactUs";
+// Add other exports as needed

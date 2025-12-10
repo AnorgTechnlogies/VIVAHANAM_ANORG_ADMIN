@@ -6,24 +6,26 @@ import {
   UserPlusIcon,
   BuildingOfficeIcon, 
   DocumentIcon,
-  ChatBubbleLeftRightIcon,  // for Faq
-  PencilSquareIcon,       // for Blog
+  ChatBubbleLeftRightIcon,
+  PencilSquareIcon,
   StarIcon, 
   EnvelopeIcon,  
 } from "@heroicons/react/24/solid";
-import { Home, Profile } from "@/pages/dashboard";
+import Home from "@/pages/dashboard/Home";
+import Profile from "@/pages/dashboard/Profile";
 import { SignIn, SignUp } from "@/pages/auth";
-import AddPlan from "./pages/dashboard/AddPlan";
+// import AddPlan from "./pages/dashboard/AddPlan";
 import TestimonialAdmin from "./pages/dashboard/TestimonialAdmin";
 import Blog from "./pages/dashboard/Blog";
 import FaqPage from "./pages/dashboard/FaqPage";
 import ContactUs from "./pages/dashboard/ContactUs";
 import AdminUsersDashboard from "./pages/dashboard/UserInfo";
-
-
+import AdminDynamicFormManager from "./pages/dashboard/AdminDynamicFormManager";
+import MatchmakingPlans from "./pages/dashboard/MatchmakingPlans";
+import ContactInfoManagement from "./pages/dashboard/ContactInfoManagement";
 
 const icon = {
-  className: "w-5 h-5 text-inherit",
+  className: "w-5 h-5 text-inherit flex-shrink-0",
 };
 
 export const routes = [
@@ -36,49 +38,65 @@ export const routes = [
         path: "/home",
         element: <Home />,
       },
-
-{
+      {
         icon: <UserCircleIcon {...icon} />,
         name: "User Information",
         path: "/userinfo",
         element: <AdminUsersDashboard />,
       },
-
       {
         icon: <UserCircleIcon {...icon} />,
-        name: "profile",
+        name: "Profile",
         path: "/profile",
         element: <Profile />,
       },
-      {
-        icon: <UserPlusIcon {...icon} />,
-        name: "Add Plan",
-        path: "/addPlan",
-        element: <AddPlan />,
-      },
+      // {
+      //   icon: <UserPlusIcon {...icon} />,
+      //   name: "Add Plan",
+      //   path: "/addPlan",
+      //   element: <AddPlan />,
+      // },
       {
         icon: <StarIcon {...icon} />,
         name: "Testimonials",
         path: "/testimonials",
         element: <TestimonialAdmin />,
       },
-        {
+      {
         icon: <PencilSquareIcon {...icon} />,
         name: "Blog Page",
         path: "/blog",
         element: <Blog />,
       },
-        {
+      {
         icon: <ChatBubbleLeftRightIcon {...icon} />,
-        name: "Faq Page",
+        name: "FAQ Page",
         path: "/faq",
         element: <FaqPage />,
       },
-          {
+      {
         icon: <EnvelopeIcon {...icon} />,
         name: "Contact Us",
         path: "/contact",
         element: <ContactUs />,
+      },
+      {
+        icon: <DocumentIcon {...icon} />,
+        name: "Dynamic Form Manager",
+        path: "/dynamic-form-manager",
+        element: <AdminDynamicFormManager />,
+      },
+      {
+        icon: <RectangleStackIcon {...icon} />,
+        name: "Matchmaking Plans",
+        path: "/matchmaking-plans",
+        element: <MatchmakingPlans />,
+      },
+      {
+        icon: <EnvelopeIcon {...icon} />,
+        name: "Contact Info",
+        path: "/contact-info",
+        element: <ContactInfoManagement />,
       },
     ],
   },
@@ -88,19 +106,18 @@ export const routes = [
     pages: [
       {
         icon: <ServerStackIcon {...icon} />,
-        name: "sign in",
+        name: "Sign In",
         path: "/sign-in",
         element: <SignIn />,
       },
       {
         icon: <RectangleStackIcon {...icon} />,
-        name: "sign up",
+        name: "Sign Up",
         path: "/sign-up",
         element: <SignUp />,
       },
     ],
   },
 ];
-
 
 export default routes;

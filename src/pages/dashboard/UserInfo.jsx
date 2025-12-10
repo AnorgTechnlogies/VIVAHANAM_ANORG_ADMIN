@@ -4,7 +4,8 @@ import { Search, Users, ChevronLeft, ChevronRight, Eye, Filter, X, AlertCircle, 
 import { useNavigate } from 'react-router-dom';
 import '../dashboard/UserInfo.css'; // Ensure this file exists in src/pages/dashboard/
 
-const API_BASE = '/api/admin';
+const BASE_URL = '/api/user';
+
 
 const AdminUsersDashboard = () => {
   const [users, setUsers] = useState([]);
@@ -50,7 +51,7 @@ const AdminUsersDashboard = () => {
         search: encodeURIComponent(search),
       });
 
-      const res = await fetch(`${API_BASE}/users?${queryParams.toString()}`, {
+      const res = await fetch(`${BASE_URL}/users?${queryParams.toString()}`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken.trim()}`,
@@ -99,7 +100,7 @@ const AdminUsersDashboard = () => {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/users/${id}`, {
+      const res = await fetch(`${BASE_URL}/users/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -362,7 +363,7 @@ const AdminUsersDashboard = () => {
             )}
             <Section title="Privacy Settings">
               <InfoRow label="Show Email" value={user.showEmail ? '✅ Yes' : '❌ No'} />
-              <InfoRow label="Show Mobile" value={user.showMobile ? '✅ Yes' : '❌ No'} />
+              {/* <InfoRow label="Show Mobile" value={user.showMobile ? '✅ Yes' : '❌ No'} /> */}
               <InfoRow label="Profile Visibility" value={user.profileVisibility || 'N/A'} />
               <InfoRow label="Photo Visibility" value={user.photoVisibility || 'N/A'} />
             </Section>

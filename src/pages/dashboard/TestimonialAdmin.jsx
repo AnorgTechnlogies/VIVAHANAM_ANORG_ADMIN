@@ -10,12 +10,12 @@ import {
   Avatar,
   Tooltip,
   Alert,
-  Spinner,
   IconButton,
   Dialog,
   DialogHeader,
   DialogBody,
   DialogFooter,
+  Input,
 } from "@material-tailwind/react";
 import {
   CheckCircleIcon,
@@ -24,23 +24,23 @@ import {
   StarIcon,
   ArrowPathIcon,
   XMarkIcon,
+  MagnifyingGlassIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/solid";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const TABLE_HEAD = [
-  "Couple Name",
+  "Couple",
   "Wedding Date",
   "Rating",
-  "Message",
+  "Message Preview",
   "Submitted",
   "Status",
   "Actions",
 ];
 
-/* -------------------------------------------------
-   SAFE TEXT – never throws
-   ------------------------------------------------- */
 const safeText = (value, fallback = "—") => {
   if (typeof value === "string") {
     const trimmed = value.trim();
@@ -51,39 +51,77 @@ const safeText = (value, fallback = "—") => {
   return fallback;
 };
 
-/* -------------------------------------------------
-   MAIN COMPONENT
-   ------------------------------------------------- */
 export default function TestimonialAdmin() {
   const [testimonials, setTestimonials] = useState([]);
+  const [filteredTestimonials, setFilteredTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [selectedTestimonial, setSelectedTestimonial] = useState(null);
   const [openModal, setOpenModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  const API_URL = import.meta.env.VITE_API_KEY;
+  const BASE_URL = import.meta.env.VITE_API_KEY;
 
-  /* -------------------------------------------------
-     FETCH ALL
-     ------------------------------------------------- */
+  const navigate = useNavigate();
+
+  // Helper function to get auth token
+  const getAuthToken = () => {
+    return localStorage.getItem("adminToken") || localStorage.getItem("token");
+  };
+
+  // Helper function to handle auth errors
+  const handleAuthError = () => {
+    toast.error("Session expired. Please log in again.");
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("token");
+    setTimeout(() => {
+      navigate("/auth/sign-in");
+    }, 1500);
+  };
+
+  // Fetch all testimonials
   const fetchTestimonials = async (silent = false) => {
     if (!silent) setLoading(true);
     else setRefreshing(true);
     setError("");
 
     try {
-      const res = await axios.get(
-        `${API_URL}/api/testimonials/getAllTestimonialsAdmin`,
-        { withCredentials: true }
-      );
+      const token = getAuthToken();
+
+      if (!token) {
+        setError("Please log in to access this page");
+        toast.error("Authentication required");
+        handleAuthError();
+        return;
+      }
+
+      const res = await axios.get(`${BASE_URL}/testimonials/all`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
 
       const data = Array.isArray(res.data?.data) ? res.data.data : [];
       setTestimonials(data);
+      setFilteredTestimonials(data);
+
+      if (!silent) {
+        console.log("✅ Testimonials loaded:", data.length);
+      }
     } catch (err) {
-      const msg = err.response?.data?.message || "Failed to load testimonials";
-      setError(msg);
-      toast.error(msg);
+      console.error("❌ Fetch Error:", err.response || err);
+
+      if (err.response?.status === 401) {
+        setError("Unauthorized. Please log in again.");
+        handleAuthError();
+      } else {
+        const msg = err.response?.data?.message || "Failed to load testimonials";
+        setError(msg);
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -94,91 +132,150 @@ export default function TestimonialAdmin() {
     fetchTestimonials();
   }, []);
 
-  /* -------------------------------------------------
-     APPROVE
-     ------------------------------------------------- */
+  // Filter testimonials based on search and status
+  useEffect(() => {
+    let filtered = testimonials;
+
+    if (statusFilter === "pending") {
+      filtered = filtered.filter((t) => !t.isActive);
+    } else if (statusFilter === "approved") {
+      filtered = filtered.filter((t) => t.isActive);
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (t) =>
+          t.name?.toLowerCase().includes(query) ||
+          t.message?.toLowerCase().includes(query) ||
+          t.weddingDate?.toLowerCase().includes(query)
+      );
+    }
+
+    setFilteredTestimonials(filtered);
+  }, [searchQuery, statusFilter, testimonials]);
+
+  // Approve testimonial
   const handleApprove = async (id, e) => {
     if (e) e.stopPropagation();
+
     const already = testimonials.find((t) => t._id === id)?.isActive;
     if (already) {
-      toast.warn("Already approved");
+      toast.warn("This testimonial is already approved");
       return;
     }
 
     try {
+      const token = getAuthToken();
+
+      if (!token) {
+        handleAuthError();
+        return;
+      }
+
       const res = await axios.patch(
-        `${API_URL}/api/testimonials/approve/${id}`,
+        `${BASE_URL}/testimonials/approve/${id}`,
         {},
-        { withCredentials: true, headers: { "Content-Type": "application/json" } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
       );
 
       if (res.data.success) {
         setTestimonials((prev) =>
           prev.map((t) => (t._id === id ? { ...t, isActive: true } : t))
         );
-        toast.success("Approved");
+        toast.success("✅ Testimonial approved successfully!");
+        console.log("✅ Approved:", res.data.data);
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Approve failed");
+      console.error("❌ Approve Error:", err.response || err);
+
+      if (err.response?.status === 401) {
+        handleAuthError();
+      } else {
+        toast.error(err.response?.data?.message || "Failed to approve testimonial");
+      }
     }
   };
 
-  /* -------------------------------------------------
-     DELETE (works for pending & approved)
-     ------------------------------------------------- */
+  // Delete testimonial
   const handleDelete = async (id, e) => {
     if (e) e.stopPropagation();
+
     const testimonial = testimonials.find((t) => t._id === id);
     const name = safeText(testimonial?.name, "this testimonial");
 
-    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) {
+      return;
+    }
 
     try {
-      await axios.delete(`${API_URL}/api/testimonials/deleteTestimonial/${id}`, {
+      const token = getAuthToken();
+
+      if (!token) {
+        handleAuthError();
+        return;
+      }
+
+      await axios.delete(`${BASE_URL}/testimonials/delete/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         withCredentials: true,
       });
 
       setTestimonials((prev) => prev.filter((t) => t._id !== id));
-      toast.success("Deleted");
+      toast.success("🗑️ Testimonial deleted successfully!");
+      console.log("✅ Deleted testimonial ID:", id);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Delete failed");
+      console.error("❌ Delete Error:", err.response || err);
+
+      if (err.response?.status === 401) {
+        handleAuthError();
+      } else {
+        toast.error(err.response?.data?.message || "Failed to delete testimonial");
+      }
     }
   };
 
-  /* -------------------------------------------------
-     HANDLE ROW CLICK
-     ------------------------------------------------- */
+  // Handle row click to open modal
   const handleRowClick = (t) => {
     setSelectedTestimonial(t);
     setOpenModal(true);
   };
 
-  /* -------------------------------------------------
-     UI HELPERS
-     ------------------------------------------------- */
+  // Render status chip
   const statusChip = (active) =>
     active ? (
       <Chip
-        variant="ghost"
+        variant="gradient"
         color="green"
         size="sm"
         value="Approved"
         icon={<CheckCircleIcon className="h-4 w-4" />}
+        className="w-fit"
       />
     ) : (
       <Chip
-        variant="ghost"
+        variant="gradient"
         color="amber"
         size="sm"
         value="Pending"
         icon={<ClockIcon className="h-4 w-4" />}
+        className="w-fit"
       />
     );
 
+  // Render star rating
   const renderStars = (rating) => {
     const r = Number(rating) || 0;
     return (
-      <div className="flex gap-1">
+      <div className="flex gap-0.5">
         {[...Array(5)].map((_, i) => (
           <StarIcon
             key={i}
@@ -189,22 +286,28 @@ export default function TestimonialAdmin() {
     );
   };
 
-  /* -------------------------------------------------
-     SKELETON ROW
-     ------------------------------------------------- */
-  const SkeletonRow = () => (
-    <tr>
-      {TABLE_HEAD.map((_, i) => (
-        <td key={i} className="p-4">
-          <div className="h-4 bg-gray-200 rounded animate-pulse w-full"></div>
-        </td>
-      ))}
-    </tr>
+  // Stats card component
+  const StatsCard = ({ title, value, color, icon: Icon }) => (
+    <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+      <CardBody className="p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <Typography variant="small" className="font-normal text-gray-600">
+              {title}
+            </Typography>
+            <Typography variant="h4" color={color} className="mt-1">
+              {value}
+            </Typography>
+          </div>
+          <div className={`p-3 rounded-lg bg-${color}-50`}>
+            <Icon className={`h-6 w-6 text-${color}-500`} />
+          </div>
+        </div>
+      </CardBody>
+    </Card>
   );
 
-  /* -------------------------------------------------
-     MODAL RENDER
-     ------------------------------------------------- */
+  // Render modal
   const renderModal = () => {
     if (!selectedTestimonial) return null;
 
@@ -212,93 +315,122 @@ export default function TestimonialAdmin() {
     const isPending = !t.isActive;
 
     return (
-      <Dialog open={openModal} handler={() => setOpenModal(false)} size="sm">
-        <DialogHeader className="flex flex-row items-center justify-between">
-          <Typography variant="h6" color="blue-gray">
+      <Dialog open={openModal} handler={() => setOpenModal(false)} size="md">
+        <DialogHeader className="flex items-center justify-between border-b border-gray-200 pb-4">
+          <Typography variant="h5" color="blue-gray">
             Testimonial Details
           </Typography>
           <IconButton
             variant="text"
             size="sm"
             onClick={() => setOpenModal(false)}
-            className="-mt-1"
           >
-            <XMarkIcon className="h-4 w-4" />
+            <XMarkIcon className="h-5 w-5" />
           </IconButton>
         </DialogHeader>
-        <DialogBody className="p-4 space-y-4 max-h-[60vh] overflow-y-auto overflow-x-hidden">
-          <div className="flex items-center gap-3 mb-4">
+
+        <DialogBody className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+          {/* Couple Info */}
+          <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-rose-50 to-amber-50 rounded-lg">
             <Avatar
               src={t.image?.url || "/img/avatar.png"}
               alt={safeText(t.name)}
-              size="lg"
-              className="ring-2 ring-rose-100"
+              size="xl"
+              className="ring-4 ring-white shadow-lg"
             />
-            <div>
-              <Typography variant="h6" color="blue-gray" className="font-medium">
+            <div className="flex-1">
+              <Typography variant="h6" color="blue-gray" className="mb-1">
                 {safeText(t.name, "Anonymous Couple")}
               </Typography>
               {t.submittedBy && t.submittedBy !== "Guest" && (
-                <Typography variant="small" color="gray">
-                  Submitted by {safeText(t.submittedBy, "Guest")}
+                <Typography variant="small" color="gray" className="mb-2">
+                  Submitted by: {safeText(t.submittedBy, "Guest")}
                 </Typography>
               )}
+              {statusChip(t.isActive)}
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Typography variant="small" color="blue-gray" className="font-medium">
-              Wedding Date:
-            </Typography>
-            <Typography variant="small" color="gray">
-              {safeText(t.weddingDate, "—")}
-            </Typography>
+          {/* Wedding Date & Submitted Date */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <Typography
+                variant="small"
+                className="font-semibold text-blue-gray-700 mb-1"
+              >
+                Wedding Date
+              </Typography>
+              <Typography variant="small" color="blue-gray">
+                {safeText(t.weddingDate, "—")}
+              </Typography>
+            </div>
+
+            <div className="p-4 bg-purple-50 rounded-lg">
+              <Typography
+                variant="small"
+                className="font-semibold text-blue-gray-700 mb-1"
+              >
+                Submitted On
+              </Typography>
+              <Typography variant="small" color="blue-gray">
+                {new Date(t.createdAt).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </Typography>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Typography variant="small" color="blue-gray" className="font-medium">
-              Rating:
+          {/* Rating */}
+          <div className="p-4 bg-amber-50 rounded-lg">
+            <Typography
+              variant="small"
+              className="font-semibold text-blue-gray-700 mb-2"
+            >
+              Rating
             </Typography>
-            <div>{renderStars(t.rating)}</div>
+            {renderStars(t.rating)}
           </div>
 
-          <div className="space-y-2">
-            <Typography variant="small" color="blue-gray" className="font-medium">
-              Message:
+          {/* Message */}
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <Typography
+              variant="small"
+              className="font-semibold text-blue-gray-700 mb-2"
+            >
+              Message
             </Typography>
-            <div className="bg-blue-gray-50 p-3 rounded-md max-h-40 overflow-y-auto overflow-x-hidden">
-              <Typography 
-                variant="small" 
+            <div className="max-h-48 overflow-y-auto pr-2">
+              <Typography
+                variant="small"
                 color="blue-gray"
-                className="whitespace-pre-wrap break-words"
+                className="whitespace-pre-wrap break-words leading-relaxed"
               >
                 {t.message || "—"}
               </Typography>
             </div>
           </div>
-
-          <div className="space-y-2">
-            <Typography variant="small" color="blue-gray" className="font-medium">
-              Submitted:
-            </Typography>
-            <Typography variant="small" color="gray">
-              {new Date(t.createdAt).toLocaleDateString()}
-            </Typography>
-          </div>
-
-          <div className="space-y-2">
-            <Typography variant="small" color="blue-gray" className="font-medium">
-              Status:
-            </Typography>
-            {statusChip(t.isActive)}
-          </div>
         </DialogBody>
-        <DialogFooter className="justify-end space-x-2">
+
+        <DialogFooter className="border-t border-gray-200 pt-4 space-x-2">
+          {isPending && (
+            <Button
+              color="green"
+              onClick={() => {
+                handleApprove(t._id);
+                setOpenModal(false);
+              }}
+              className="flex items-center gap-2"
+            >
+              <CheckCircleIcon className="h-4 w-4" />
+              Approve
+            </Button>
+          )}
           <Button
             variant="outlined"
             color="blue-gray"
             onClick={() => setOpenModal(false)}
-            size="sm"
           >
             Close
           </Button>
@@ -307,44 +439,42 @@ export default function TestimonialAdmin() {
     );
   };
 
-  /* -------------------------------------------------
-     RENDER
-     ------------------------------------------------- */
+  // Calculate stats
+  const totalCount = testimonials.length;
+  const pendingCount = testimonials.filter((t) => !t.isActive).length;
+  const approvedCount = testimonials.filter((t) => t.isActive).length;
+
+  // Loading state
   if (loading) {
     return (
-      <Card className="h-full">
-        <CardBody>
-          <table className="w-full table-auto">
-            <thead>
-              <tr>
-                {TABLE_HEAD.map((head) => (
-                  <th key={head} className="p-4 text-left">
-                    <Typography variant="small" className="font-normal opacity-70">
-                      {head}
-                    </Typography>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {[1, 2, 3].map((i) => (
-                <SkeletonRow key={i} />
-              ))}
-            </tbody>
-          </table>
-        </CardBody>
-      </Card>
+      <div className="space-y-6">
+        <Card>
+          <CardBody>
+            <div className="flex justify-center items-center py-20">
+              <div className="text-center">
+                <ArrowPathIcon className="h-12 w-12 animate-spin text-amber-500 mx-auto mb-4" />
+                <Typography variant="h6" color="gray">
+                  Loading testimonials...
+                </Typography>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+      </div>
     );
   }
 
+  // Error state
   if (error) {
     return (
-      <Card className="h-full">
-        <CardBody className="flex flex-col items-center justify-center space-y-4">
+      <Card>
+        <CardBody className="flex flex-col items-center justify-center space-y-4 py-20">
+          <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mb-2" />
           <Alert color="red" className="max-w-md">
             {error}
           </Alert>
           <Button onClick={() => fetchTestimonials()} color="amber">
+            <ArrowPathIcon className="h-4 w-4 mr-2 inline" />
             Try Again
           </Button>
         </CardBody>
@@ -352,200 +482,276 @@ export default function TestimonialAdmin() {
     );
   }
 
+  // Main render
   return (
-    <Card className="h-full w-full">
-      {/* <CardHeader floated={false} shadow={false} className="rounded-none">
-        <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <Typography variant="h5" color="blue-gray">
-              Manage Testimonials
-            </Typography>
-            <Typography color="gray" className="mt-1 font-normal">
-              Review, approve, or delete user submissions
-            </Typography>
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatsCard
+          title="Total Testimonials"
+          value={totalCount}
+          color="blue"
+          icon={StarIcon}
+        />
+        <StatsCard
+          title="Pending Review"
+          value={pendingCount}
+          color="amber"
+          icon={ClockIcon}
+        />
+        <StatsCard
+          title="Approved"
+          value={approvedCount}
+          color="green"
+          icon={CheckCircleIcon}
+        />
+      </div>
+
+      {/* Main Table Card */}
+      <Card className="w-full">
+        <CardHeader
+          floated={false}
+          shadow={false}
+          className="rounded-none bg-gradient-to-r from-rose-50 to-amber-50"
+        >
+          <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <Typography variant="h5" color="blue-gray">
+                Manage Testimonials
+              </Typography>
+              <Typography color="gray" className="mt-1 font-normal">
+                Review, approve, or delete customer testimonials
+              </Typography>
+            </div>
+
+            <Button
+              size="sm"
+              color="amber"
+              onClick={() => fetchTestimonials(true)}
+              disabled={refreshing}
+              className="flex items-center gap-2"
+            >
+              <ArrowPathIcon
+                className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </Button>
           </div>
 
-          <Button
-            size="sm"
-            color="amber"
-            onClick={() => fetchTestimonials(true)}
-            disabled={refreshing}
-            className="flex items-center gap-2"
-          >
-            <ArrowPathIcon
-              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </Button>
-        </div>
-      </CardHeader> */}
+          {/* Search and Filters */}
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                label="Search testimonials..."
+                icon={<MagnifyingGlassIcon className="h-5 w-5" />}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
 
-      <CardBody className="px-0">
-        <table className="w-full min-w-max table-auto text-left">
-          <thead>
-            <tr>
-              {TABLE_HEAD.map((head) => (
-                <th
-                  key={head}
-                  className="border-y border-blue-gray-100 bg-blue-gray-50 p-4"
-                >
-                  <Typography
-                    variant="small"
-                    color="blue-gray"
-                    className="font-normal leading-none opacity-70"
-                  >
-                    {head}
-                  </Typography>
-                </th>
-              ))}
-            </tr>
-          </thead>
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                size="sm"
+                variant={statusFilter === "all" ? "filled" : "outlined"}
+                color="blue-gray"
+                onClick={() => setStatusFilter("all")}
+              >
+                All ({totalCount})
+              </Button>
+              <Button
+                size="sm"
+                variant={statusFilter === "pending" ? "filled" : "outlined"}
+                color="amber"
+                onClick={() => setStatusFilter("pending")}
+              >
+                Pending ({pendingCount})
+              </Button>
+              <Button
+                size="sm"
+                variant={statusFilter === "approved" ? "filled" : "outlined"}
+                color="green"
+                onClick={() => setStatusFilter("approved")}
+              >
+                Approved ({approvedCount})
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
 
-          <tbody>
-            {testimonials.length === 0 ? (
+        <CardBody className="overflow-x-auto px-0">
+          <table className="w-full min-w-max table-auto text-left">
+            <thead>
               <tr>
-                <td colSpan={7} className="p-8 text-center text-gray-500">
-                  No testimonials yet.
-                </td>
-              </tr>
-            ) : (
-              testimonials.map((t) => {
-                const isPending = !t.isActive;
-
-                return (
-                  <tr
-                    key={t._id}
-                    className="even:bg-blue-gray-50/50 hover:bg-blue-gray-50 cursor-pointer"
-                    onClick={() => handleRowClick(t)}
+                {TABLE_HEAD.map((head) => (
+                  <th
+                    key={head}
+                    className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
                   >
-                    {/* Couple */}
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar
-                          src={t.image?.url || "/img/avatar.png"}
-                          alt={safeText(t.name)}
-                          size="sm"
-                          className="ring-2 ring-rose-100"
-                        />
-                        <div>
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-medium"
-                          >
-                            {safeText(t.name, "Anonymous Couple")}
-                          </Typography>
-                          {t.submittedBy && t.submittedBy !== "Guest" && (
+                    <Typography
+                      variant="small"
+                      color="blue-gray"
+                      className="font-bold leading-none"
+                    >
+                      {head}
+                    </Typography>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredTestimonials.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <StarIcon className="h-16 w-16 text-gray-300 mb-4" />
+                      <Typography variant="h6" color="gray">
+                        No testimonials found
+                      </Typography>
+                      <Typography variant="small" color="gray" className="mt-2">
+                        {searchQuery || statusFilter !== "all"
+                          ? "Try adjusting your filters"
+                          : "Testimonials will appear here once submitted"}
+                      </Typography>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredTestimonials.map((t, index) => {
+                  const isPending = !t.isActive;
+                  const isLast = index === filteredTestimonials.length - 1;
+                  const classes = isLast
+                    ? "p-4"
+                    : "p-4 border-b border-blue-gray-50";
+
+                  return (
+                    <tr
+                      key={t._id}
+                      className="hover:bg-blue-gray-50/50 cursor-pointer transition-colors"
+                      onClick={() => handleRowClick(t)}
+                    >
+                      {/* Couple */}
+                      <td className={classes}>
+                        <div className="flex items-center gap-3">
+                          <Avatar
+                            src={t.image?.url || "/img/avatar.png"}
+                            alt={safeText(t.name)}
+                            size="md"
+                            className="ring-2 ring-rose-100"
+                          />
+                          <div>
                             <Typography
                               variant="small"
-                              color="gray"
-                              className="opacity-70"
+                              color="blue-gray"
+                              className="font-semibold"
                             >
-                              by {safeText(t.submittedBy, "Guest")}
+                              {safeText(t.name, "Anonymous Couple")}
                             </Typography>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Wedding Date */}
-                    <td className="p-4">
-                      <Typography variant="small" color="blue-gray">
-                        {safeText(t.weddingDate, "—")}
-                      </Typography>
-                    </td>
-
-                    {/* Rating */}
-                    <td className="p-4">{renderStars(t.rating)}</td>
-
-                    {/* Message */}
-                    <td className="p-4">
-                      <Typography
-                        variant="small"
-                        color="blue-gray"
-                        className="max-w-xs truncate"
-                        title={t.message}
-                      >
-                        "{safeText(t.message, "—")}"
-                      </Typography>
-                    </td>
-
-                    {/* Submitted */}
-                    <td className="p-4">
-                      <Typography variant="small" color="blue-gray">
-                        {new Date(t.createdAt).toLocaleDateString()}
-                      </Typography>
-                    </td>
-
-                    {/* Status */}
-                    <td className="p-4">{statusChip(t.isActive)}</td>
-
-                    {/* Actions */}
-                    <td
-                      className="p-4"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="flex items-center gap-2">
-                        {isPending && (
-                          <>
-                            <Tooltip content="Approve">
-                              <IconButton
-                                size="sm"
-                                color="green"
-                                onClick={(e) => handleApprove(t._id, e)}
-                                className="p-2"
+                            {t.submittedBy && t.submittedBy !== "Guest" && (
+                              <Typography
+                                variant="small"
+                                color="gray"
+                                className="text-xs"
                               >
-                                <CheckCircleIcon className="h-4 w-4" />
-                              </IconButton>
-                            </Tooltip>
+                                by {safeText(t.submittedBy, "Guest")}
+                              </Typography>
+                            )}
+                          </div>
+                        </div>
+                      </td>
 
-                            <Tooltip content="Reject & Delete">
+                      {/* Wedding Date */}
+                      <td className={classes}>
+                        <Typography variant="small" color="blue-gray">
+                          {safeText(t.weddingDate, "—")}
+                        </Typography>
+                      </td>
+
+                      {/* Rating */}
+                      <td className={classes}>{renderStars(t.rating)}</td>
+
+                      {/* Message Preview */}
+                      <td className={classes}>
+                        <Typography
+                          variant="small"
+                          color="blue-gray"
+                          className="max-w-xs truncate"
+                          title={t.message}
+                        >
+                          {safeText(t.message, "—")}
+                        </Typography>
+                      </td>
+
+                      {/* Submitted Date */}
+                      <td className={classes}>
+                        <Typography variant="small" color="blue-gray">
+                          {new Date(t.createdAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </Typography>
+                      </td>
+
+                      {/* Status */}
+                      <td className={classes}>{statusChip(t.isActive)}</td>
+
+                      {/* Actions */}
+                      <td
+                        className={classes}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center gap-2">
+                          {isPending && (
+                            <>
+                              <Tooltip content="Approve">
+                                <IconButton
+                                  size="sm"
+                                  variant="gradient"
+                                  color="green"
+                                  onClick={(e) => handleApprove(t._id, e)}
+                                >
+                                  <CheckCircleIcon className="h-4 w-4" />
+                                </IconButton>
+                              </Tooltip>
+
+                              <Tooltip content="Reject & Delete">
+                                <IconButton
+                                  size="sm"
+                                  variant="gradient"
+                                  color="red"
+                                  onClick={(e) => handleDelete(t._id, e)}
+                                >
+                                  <TrashIcon className="h-4 w-4" />
+                                </IconButton>
+                              </Tooltip>
+                            </>
+                          )}
+
+                          {!isPending && (
+                            <Tooltip content="Delete">
                               <IconButton
                                 size="sm"
+                                variant="outlined"
                                 color="red"
                                 onClick={(e) => handleDelete(t._id, e)}
-                                className="p-2"
                               >
                                 <TrashIcon className="h-4 w-4" />
                               </IconButton>
                             </Tooltip>
-                          </>
-                        )}
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </CardBody>
+      </Card>
 
-                        {/* Delete for Approved */}
-                        {!isPending && (
-                          <Tooltip content="Delete">
-                            <IconButton
-                              size="sm"
-                              color="red"
-                              onClick={(e) => handleDelete(t._id, e)}
-                              className="p-2"
-                            >
-                              <TrashIcon className="h-4 w-4" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-
-                        {!isPending && (
-                          <Typography
-                            variant="small"
-                            color="green"
-                            className="text-xs font-medium ml-1"
-                          >
-                            Approved
-                          </Typography>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </CardBody>
-
+      {/* Modal */}
       {renderModal()}
-    </Card>
+    </div>
   );
 }
