@@ -13,7 +13,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { SignIn, SignUp } from "@/pages/auth";
 // import AddPlan from "./pages/dashboard/AddPlan";
-import Home from "./pages/dashboard/Home";
+import Home from "./pages/dashboard/home";
 import Profile from "./pages/dashboard/Profile";
 import TestimonialAdmin from "./pages/dashboard/TestimonialAdmin";
 import Blog from "./pages/dashboard/Blog";
