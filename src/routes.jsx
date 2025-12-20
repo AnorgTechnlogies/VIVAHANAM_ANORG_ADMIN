@@ -14,7 +14,7 @@ import {
 import { SignIn, SignUp } from "@/pages/auth";
 // import AddPlan from "./pages/dashboard/AddPlan";
 import Home from "./pages/dashboard/home";
-import Profile from "./pages/dashboard/Profile";
+import Profile from "./pages/dashboard/profile";
 import TestimonialAdmin from "./pages/dashboard/TestimonialAdmin";
 import Blog from "./pages/dashboard/Blog";
 import FaqPage from "./pages/dashboard/FaqPage";
