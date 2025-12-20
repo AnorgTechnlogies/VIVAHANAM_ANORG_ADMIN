@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Search, Users, ChevronLeft, ChevronRight, Eye, Filter, X, AlertCircle, RefreshCw, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import '../dashboard/UserInfo.css'; // Ensure this file exists in src/pages/dashboard/
 
 const BASE_URL = '/api/user';
 
@@ -691,5 +690,6 @@ const InfoRow = ({ label, value }) => (
     <p className="text-gray-900 font-medium">{value || 'N/A'}</p>
   </div>
 );
+
 
 export default AdminUsersDashboard;

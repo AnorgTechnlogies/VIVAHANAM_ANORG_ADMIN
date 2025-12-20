@@ -23,7 +23,8 @@ import AdminUsersDashboard from "./pages/dashboard/UserInfo";
 import AdminDynamicFormManager from "./pages/dashboard/AdminDynamicFormManager";
 import MatchmakingPlans from "./pages/dashboard/MatchmakingPlans";
 import ContactInfoManagement from "./pages/dashboard/ContactInfoManagement";
-
+import WeddingServiceForm from "./pages/dashboard/WeddingServiceForm";
+import MatchmakingPayuser from "./pages/dashboard/MatchmakingPayuser";
 const icon = {
   className: "w-5 h-5 text-inherit flex-shrink-0",
 };
@@ -50,12 +51,12 @@ export const routes = [
         path: "/profile",
         element: <Profile />,
       },
-      // {
-      //   icon: <UserPlusIcon {...icon} />,
-      //   name: "Add Plan",
-      //   path: "/addPlan",
-      //   element: <AddPlan />,
-      // },
+      {
+        icon: <UserPlusIcon {...icon} />,
+        name: " Wedding Service User",
+        path: "/WeddingServiceForm",
+        element: <WeddingServiceForm />,
+      },
       {
         icon: <StarIcon {...icon} />,
         name: "Testimonials",
@@ -85,6 +86,12 @@ export const routes = [
         name: "Dynamic Form Manager",
         path: "/dynamic-form-manager",
         element: <AdminDynamicFormManager />,
+      },
+       {
+        icon: <EnvelopeIcon {...icon} />,
+        name: "MatchMaking Pay User",
+        path: "/Matchnaking-pay-user",
+        element: <MatchmakingPayuser />,
       },
       {
         icon: <RectangleStackIcon {...icon} />,
