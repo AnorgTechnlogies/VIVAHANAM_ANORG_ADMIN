@@ -20,7 +20,6 @@ import {
   ShieldCheckIcon,
 } from "@heroicons/react/24/solid";
 import { useSelector } from "react-redux";
-import AdminImg from "../../../public/img/dummy-image.jpg";
 
 // Helper component to avoid repeating Typography + fallback logic
 const InfoText = ({ children, fallback = "Not provided" }) => (
