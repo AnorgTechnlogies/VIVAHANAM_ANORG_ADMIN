@@ -3,11 +3,10 @@ import axios from 'axios';
 import { 
   Trash2, Eye, FileText, Calendar, Download,
   CreditCard, DollarSign, Package, Filter, X,
-  Loader2, AlertCircle, ChevronLeft, ChevronRight, Search,
-  User, Mail, Calendar as CalendarIcon
+  Loader2, AlertCircle, ChevronLeft, ChevronRight, User
 } from 'lucide-react';
 
-const API_BASE_URL =  import.meta.env.VITE_API_KEY;
+const API_BASE_URL = "http://localhost:8000/api";
 
 const MatchmakingPayuser = () => {
   const [payments, setPayments] = useState([]);
@@ -33,7 +32,21 @@ const MatchmakingPayuser = () => {
 
   // Get auth token
   const getAuthToken = () => {
-    return localStorage.getItem('token') || sessionStorage.getItem('token') || localStorage.getItem('adminToken');
+    const tokenSources = [
+      localStorage.getItem('adminToken'),
+      localStorage.getItem('token'),
+      sessionStorage.getItem('token'),
+      localStorage.getItem('authToken'),
+      sessionStorage.getItem('authToken')
+    ];
+    
+    for (const token of tokenSources) {
+      if (token && token.trim() !== '' && token !== 'undefined' && token !== 'null') {
+        return token;
+      }
+    }
+    
+    return null;
   };
 
   // Fetch all plan purchases with filters
@@ -43,9 +56,14 @@ const MatchmakingPayuser = () => {
       setError(null);
       
       const token = getAuthToken();
+      
       if (!token) {
         setError('Authentication token not found. Please login again.');
         setLoading(false);
+        
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
         return;
       }
 
@@ -58,15 +76,27 @@ const MatchmakingPayuser = () => {
       if (filters.month) params.append('month', filters.month);
       if (filters.vivId) params.append('vivId', filters.vivId);
 
-      const response = await axios.get(`${API_BASE_URL}/plan-purchases?${params.toString()}`, {
+      const url = `${API_BASE_URL}/payment/plan-purchases?${params.toString()}`;
+      console.log('🔍 Fetching from URL:', url);
+
+      const response = await axios.get(url, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
-
+      
+      console.log('🔍 API Response:', response.data);
+      
       if (response.data.success) {
-        setPayments(response.data.data.transactions || []);
+        const transactions = response.data.data.transactions || [];
+        console.log('🔍 Transactions received:', transactions);
+        
+        if (transactions.length > 0) {
+          console.log('🔍 First transaction:', JSON.stringify(transactions[0], null, 2));
+        }
+        
+        setPayments(transactions);
         setPagination(response.data.data.pagination || {
           page: 1,
           limit: 25,
@@ -77,8 +107,21 @@ const MatchmakingPayuser = () => {
         setError(response.data.message || 'Failed to fetch data');
       }
     } catch (err) {
-      console.error('❌ Error fetching payments:', err);
-      if (err.response) {
+      console.error('❌ Fetch error:', err);
+      if (err.response?.status === 401) {
+        setError('Session expired. Please login again.');
+        
+        // Clear invalid tokens
+        localStorage.removeItem('token');
+        localStorage.removeItem('adminToken');
+        sessionStorage.removeItem('token');
+        localStorage.removeItem('authToken');
+        sessionStorage.removeItem('authToken');
+        
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else if (err.response) {
         setError(err.response.data?.message || `Error ${err.response.status}: ${err.response.statusText}`);
       } else if (err.request) {
         setError('Network error. Please check your connection.');
@@ -96,7 +139,7 @@ const MatchmakingPayuser = () => {
 
   // Format currency
   const formatCurrency = (amount, currency = 'USD') => {
-    if (!amount) return '$0.00';
+    if (!amount && amount !== 0) return '$0.00';
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: currency
@@ -119,6 +162,58 @@ const MatchmakingPayuser = () => {
     }
   };
 
+  // Get user display name
+  const getUserDisplayName = (payment) => {
+    if (!payment) return 'Unknown User';
+    
+    // Try multiple sources
+    return payment.user?.name || 
+           payment.metadata?.userInfo?.name || 
+           (payment.userVivId ? `User ${payment.userVivId}` : 'Unknown User');
+  };
+
+  // Get user VIV ID
+  const getUserVivId = (payment) => {
+    if (!payment) return 'N/A';
+    
+    return payment.user?.vivId || 
+           payment.userVivId || 
+           payment.metadata?.userInfo?.vivId || 
+           'N/A';
+  };
+
+  // Get user email
+  const getUserEmail = (payment) => {
+    if (!payment) return 'N/A';
+    
+    return payment.user?.email || 
+           payment.metadata?.userInfo?.email || 
+           'N/A';
+  };
+
+  // Get validity
+  const getValidity = (payment) => {
+    if (!payment) return { days: null, expiresAt: null };
+    
+    // Try from userPlan first
+    if (payment.userPlan?.validForDays) {
+      return {
+        days: payment.userPlan.validForDays,
+        expiresAt: payment.userPlan.expiresAt
+      };
+    }
+    
+    // Try from metadata
+    if (payment.metadata?.planConfig?.validityDays) {
+      return {
+        days: payment.metadata.planConfig.validityDays,
+        expiresAt: null
+      };
+    }
+    
+    return { days: null, expiresAt: null };
+  };
+
   // Handle delete with confirmation
   const handleDeleteClick = (payment) => {
     setSelectedPayment(payment);
@@ -136,7 +231,8 @@ const MatchmakingPayuser = () => {
         return;
       }
 
-      const response = await axios.delete(`${API_BASE_URL}/delete/${selectedPayment._id}`, {
+      const url = `${API_BASE_URL}/payment/${selectedPayment._id}`;
+      const response = await axios.delete(url, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -152,7 +248,6 @@ const MatchmakingPayuser = () => {
         alert(response.data.message || 'Failed to delete payment');
       }
     } catch (err) {
-      console.error('❌ Delete error:', err);
       if (err.response) {
         alert(err.response.data?.message || `Error ${err.response.status}: ${err.response.statusText}`);
       } else if (err.request) {
@@ -174,7 +269,8 @@ const MatchmakingPayuser = () => {
         return;
       }
 
-      const response = await axios.get(`${API_BASE_URL}/pdf/${transactionId}`, {
+      const url = `${API_BASE_URL}/payment/pdf/${transactionId}`;
+      const response = await axios.get(url, {
         headers: { 
           Authorization: `Bearer ${token}`,
         },
@@ -182,16 +278,15 @@ const MatchmakingPayuser = () => {
       });
 
       // Create blob and download
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const urlBlob = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
-      link.href = url;
+      link.href = urlBlob;
       link.setAttribute('download', `Invoice_${transactionId}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(urlBlob);
     } catch (err) {
-      console.error('❌ PDF download error:', err);
       alert('Failed to download PDF. Please try again.');
     }
   };
@@ -205,7 +300,7 @@ const MatchmakingPayuser = () => {
   // Filter handlers
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
-    setPagination(prev => ({ ...prev, page: 1 })); // Reset to page 1 on filter change
+    setPagination(prev => ({ ...prev, page: 1 }));
   };
 
   const clearFilters = () => {
@@ -235,6 +330,17 @@ const MatchmakingPayuser = () => {
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
       setPagination(prev => ({ ...prev, page: newPage }));
+    }
+  };
+
+  // Debug function
+  const debugData = () => {
+    console.log('🔍 All payments:', payments);
+    if (payments.length > 0) {
+      console.log('🔍 First payment:', JSON.stringify(payments[0], null, 2));
+      alert(`Total payments: ${payments.length}\nCheck console for detailed data.`);
+    } else {
+      alert('No payment data available.');
     }
   };
 
@@ -275,6 +381,25 @@ const MatchmakingPayuser = () => {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button
+            onClick={debugData}
+            style={{
+              background: '#8b5cf6',
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <Eye size={18} />
+            Debug
+          </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
             style={{
@@ -424,21 +549,23 @@ const MatchmakingPayuser = () => {
             <div style={{ fontWeight: '600', color: '#dc2626' }}>Error!</div>
           </div>
           <p style={{ marginBottom: '12px', color: '#991b1b' }}>{error}</p>
-          <button
-            onClick={fetchPaymentData}
-            style={{
-              background: 'transparent',
-              border: '1px solid #dc2626',
-              color: '#dc2626',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              fontSize: '14px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            Try Again
-          </button>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <button
+              onClick={fetchPaymentData}
+              style={{
+                background: 'transparent',
+                border: '1px solid #dc2626',
+                color: '#dc2626',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                fontSize: '14px',
+                cursor: 'pointer',
+                fontWeight: '500'
+              }}
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       )}
 
@@ -473,6 +600,54 @@ const MatchmakingPayuser = () => {
             </div>
           </div>
         </div>
+        <div style={{
+          border: '1px solid #10b981',
+          borderRadius: '12px',
+          padding: '20px',
+          background: 'white',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{
+              background: 'rgba(16, 185, 129, 0.1)',
+              padding: '12px',
+              borderRadius: '8px',
+              marginRight: '16px'
+            }}>
+              <Package size={24} color="#10b981" />
+            </div>
+            <div>
+              <div style={{ color: '#6b7280', fontSize: '14px', marginBottom: '4px' }}>Showing</div>
+              <div style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>
+                {payments.length}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style={{
+          border: '1px solid #8b5cf6',
+          borderRadius: '12px',
+          padding: '20px',
+          background: 'white',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{
+              background: 'rgba(139, 92, 246, 0.1)',
+              padding: '12px',
+              borderRadius: '8px',
+              marginRight: '16px'
+            }}>
+              <Calendar size={24} color="#8b5cf6" />
+            </div>
+            <div>
+              <div style={{ color: '#6b7280', fontSize: '14px', marginBottom: '4px' }}>Page</div>
+              <div style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>
+                {pagination.page}/{pagination.totalPages}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Payment History Table */}
@@ -485,7 +660,10 @@ const MatchmakingPayuser = () => {
         <div style={{
           background: 'white',
           borderBottom: '1px solid #e5e7eb',
-          padding: '16px 24px'
+          padding: '16px 24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}>
           <h5 style={{ margin: 0, fontWeight: '600', color: '#111827' }}>All Plan Purchases</h5>
         </div>
@@ -521,192 +699,184 @@ const MatchmakingPayuser = () => {
                   </td>
                 </tr>
               ) : (
-                payments.map((payment) => (
-                  <React.Fragment key={payment._id}>
-                    <tr style={{ 
-                      borderBottom: '1px solid #f3f4f6',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onClick={() => toggleRowDetails(payment._id)}
-                    >
-                      <td style={{ padding: '16px 24px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          {payment.user?.profileImage ? (
-                            <img 
-                              src={payment.user.profileImage} 
-                              alt={payment.user.name}
-                              style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
-                            />
-                          ) : (
-                            <div style={{
-                              width: '40px',
-                              height: '40px',
-                              borderRadius: '50%',
-                              background: '#e5e7eb',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: '#6b7280',
-                              fontWeight: '600'
-                            }}>
-                              {payment.user?.name?.charAt(0) || 'U'}
-                            </div>
-                          )}
-                          <div>
-                            <div style={{ fontWeight: '600', color: '#111827', fontSize: '14px' }}>
-                              {payment.user?.name || 'N/A'}
-                            </div>
-                            <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
-                              {payment.user?.vivId || payment.userVivId || 'N/A'}
-                            </div>
-                            {payment.user?.email && (
-                              <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>
-                                {payment.user.email}
+                payments.map((payment) => {
+                  const userName = getUserDisplayName(payment);
+                  const userVivId = getUserVivId(payment);
+                  const userEmail = getUserEmail(payment);
+                  const validity = getValidity(payment);
+                  
+                  return (
+                    <React.Fragment key={payment._id}>
+                      <tr style={{ 
+                        borderBottom: '1px solid #f3f4f6',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onClick={() => toggleRowDetails(payment._id)}
+                      >
+                        <td style={{ padding: '16px 24px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            {payment.user?.profileImage ? (
+                              <img 
+                                src={payment.user.profileImage} 
+                                alt={userName}
+                                style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                              />
+                            ) : (
+                              <div style={{
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '50%',
+                                background: '#e5e7eb',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#6b7280',
+                                fontWeight: '600'
+                              }}>
+                                {userName.charAt(0).toUpperCase()}
                               </div>
                             )}
-                          </div>
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px 24px' }}>
-                        <div style={{ fontWeight: '600', color: '#111827' }}>
-                          {payment.planName || 'N/A'}
-                        </div>
-                        <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                          {payment.planCode || 'N/A'}
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px 24px', fontWeight: '600', color: '#111827' }}>
-                        {formatCurrency(payment.amount, payment.currency)}
-                      </td>
-                      <td style={{ padding: '16px 24px' }}>
-                        <div style={{ fontWeight: '600', color: '#111827' }}>
-                          {payment.purchasedProfiles || payment.creditsAllocated || 0}
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px 24px' }}>
-                        <div>{formatDate(payment.completedAt || payment.createdAt)}</div>
-                      </td>
-                      <td style={{ padding: '16px 24px' }}>
-                        {payment.userPlan?.validForDays ? (
-                          <div>
-                            <div style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>
-                              {payment.userPlan.validForDays} days
-                            </div>
-                            {payment.userPlan.expiresAt && (
-                              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
-                                Exp: {new Date(payment.userPlan.expiresAt).toLocaleDateString()}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <span style={{ color: '#9ca3af' }}>N/A</span>
-                        )}
-                      </td>
-                      <td style={{ padding: '16px 24px' }} onClick={(e) => e.stopPropagation()}>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button
-                            onClick={() => handleDownloadPDF(payment._id)}
-                            title="Download PDF"
-                            style={{
-                              background: 'transparent',
-                              border: '1px solid #10b981',
-                              color: '#10b981',
-                              padding: '8px',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              transition: 'all 0.2s'
-                            }}
-                            onMouseOver={(e) => {
-                              e.target.style.background = '#10b981';
-                              e.target.style.color = 'white';
-                            }}
-                            onMouseOut={(e) => {
-                              e.target.style.background = 'transparent';
-                              e.target.style.color = '#10b981';
-                            }}
-                          >
-                            <Download size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(payment)}
-                            title="Delete Record"
-                            disabled={deletingId === payment._id}
-                            style={{
-                              background: 'transparent',
-                              border: '1px solid #dc2626',
-                              color: '#dc2626',
-                              padding: '8px',
-                              borderRadius: '6px',
-                              cursor: deletingId === payment._id ? 'not-allowed' : 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              transition: 'all 0.2s',
-                              opacity: deletingId === payment._id ? 0.5 : 1
-                            }}
-                            onMouseOver={(e) => {
-                              if (deletingId !== payment._id) {
-                                e.target.style.background = '#dc2626';
-                                e.target.style.color = 'white';
-                              }
-                            }}
-                            onMouseOut={(e) => {
-                              if (deletingId !== payment._id) {
-                                e.target.style.background = 'transparent';
-                                e.target.style.color = '#dc2626';
-                              }
-                            }}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    {/* Expanded Details Row */}
-                    {expandedRow === payment._id && (
-                      <tr style={{ background: '#f9fafb' }}>
-                        <td colSpan="7" style={{ padding: '24px' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
                             <div>
-                              <h4 style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '600', color: '#374151' }}>Transaction Details</h4>
-                              <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.8' }}>
-                                <div><strong>Transaction ID:</strong> {payment._id}</div>
-                                <div><strong>Payment Reference:</strong> {payment.paymentReference || 'N/A'}</div>
-                                <div><strong>Payment Method:</strong> {payment.paymentGateway || 'N/A'}</div>
-                                <div><strong>Status:</strong> <span style={{ 
-                                  color: payment.status === 'COMPLETED' ? '#10b981' : '#f59e0b',
-                                  fontWeight: '600'
-                                }}>{payment.status || 'N/A'}</span></div>
-                                <div><strong>Payment Date:</strong> {formatDate(payment.completedAt || payment.createdAt)}</div>
+                              <div style={{ fontWeight: '600', color: '#111827', fontSize: '14px' }}>
+                                {userName}
                               </div>
-                            </div>
-                            {payment.userPlan && (
-                              <div>
-                                <h4 style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '600', color: '#374151' }}>Plan Details</h4>
-                                <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.8' }}>
-                                  <div><strong>Plan Display Name:</strong> {payment.userPlan.displayName || 'N/A'}</div>
-                                  <div><strong>Frequency:</strong> {payment.userPlan.frequency || 'N/A'}</div>
-                                  <div><strong>Profiles Allocated:</strong> {payment.userPlan.profilesAllocated || 0}</div>
-                                  <div><strong>Profiles Remaining:</strong> {payment.userPlan.profilesRemaining || 0}</div>
-                                  <div><strong>Validity:</strong> {payment.userPlan.validForDays || 'N/A'} days</div>
-                                  <div><strong>Expires At:</strong> {payment.userPlan.expiresAt ? new Date(payment.userPlan.expiresAt).toLocaleString() : 'N/A'}</div>
-                                  <div><strong>Status:</strong> <span style={{ 
-                                    color: payment.userPlan.isActive ? '#10b981' : '#6b7280',
-                                    fontWeight: '600'
-                                  }}>{payment.userPlan.isActive ? 'Active' : 'Expired'}</span></div>
+                              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+                                {userVivId}
+                              </div>
+                              {userEmail !== 'N/A' && (
+                                <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>
+                                  {userEmail}
                                 </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px 24px' }}>
+                          <div style={{ fontWeight: '600', color: '#111827' }}>
+                            {payment.planName || payment.planDisplayName || 'N/A'}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                            {payment.planCode || 'N/A'}
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px 24px', fontWeight: '600', color: '#111827' }}>
+                          {formatCurrency(payment.amount || payment.planPrice, payment.currency)}
+                        </td>
+                        <td style={{ padding: '16px 24px' }}>
+                          <div style={{ fontWeight: '600', color: '#111827' }}>
+                            {payment.purchasedProfiles || payment.creditsAllocated || 0}
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px 24px' }}>
+                          <div>{formatDate(payment.completedAt || payment.createdAt)}</div>
+                        </td>
+                        <td style={{ padding: '16px 24px' }}>
+                          {validity.days ? (
+                            <div>
+                              <div style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>
+                                {validity.days} days
                               </div>
-                            )}
+                              {validity.expiresAt && (
+                                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+                                  Exp: {new Date(validity.expiresAt).toLocaleDateString('en-IN')}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span style={{ color: '#9ca3af' }}>N/A</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '16px 24px' }} onClick={(e) => e.stopPropagation()}>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => handleDownloadPDF(payment._id)}
+                              title="Download PDF"
+                              style={{
+                                background: 'transparent',
+                                border: '1px solid #10b981',
+                                color: '#10b981',
+                                padding: '8px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s'
+                              }}
+                            >
+                              <Download size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteClick(payment)}
+                              title="Delete Record"
+                              disabled={deletingId === payment._id}
+                              style={{
+                                background: 'transparent',
+                                border: '1px solid #dc2626',
+                                color: '#dc2626',
+                                padding: '8px',
+                                borderRadius: '6px',
+                                cursor: deletingId === payment._id ? 'not-allowed' : 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s',
+                                opacity: deletingId === payment._id ? 0.5 : 1
+                              }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
                           </div>
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                ))
+                      
+                      {/* Expanded Details Row */}
+                      {expandedRow === payment._id && (
+                        <tr style={{ background: '#f9fafb' }}>
+                          <td colSpan="7" style={{ padding: '24px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+                              <div>
+                                <h4 style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '600', color: '#374151' }}>Transaction Details</h4>
+                                <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.8' }}>
+                                  <div><strong>Transaction ID:</strong> {payment._id}</div>
+                                  <div><strong>User Name:</strong> {userName}</div>
+                                  <div><strong>User VIV ID:</strong> {userVivId}</div>
+                                  <div><strong>User Email:</strong> {userEmail}</div>
+                                  <div><strong>Payment Reference:</strong> {payment.paymentReference || 'N/A'}</div>
+                                  <div><strong>Payment Method:</strong> {payment.paymentGateway || 'N/A'}</div>
+                                  <div><strong>Status:</strong> <span style={{ 
+                                    color: payment.status === 'COMPLETED' ? '#10b981' : '#f59e0b',
+                                    fontWeight: '600'
+                                  }}>{payment.status || 'N/A'}</span></div>
+                                  <div><strong>Payment Date:</strong> {formatDate(payment.completedAt || payment.createdAt)}</div>
+                                </div>
+                              </div>
+                              <div>
+                                <h4 style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '600', color: '#374151' }}>Plan Details</h4>
+                                <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.8' }}>
+                                  <div><strong>Plan Name:</strong> {payment.planName || 'N/A'}</div>
+                                  <div><strong>Plan Code:</strong> {payment.planCode || 'N/A'}</div>
+                                  <div><strong>Amount:</strong> {formatCurrency(payment.amount, payment.currency)}</div>
+                                  <div><strong>Profiles:</strong> {payment.purchasedProfiles || payment.creditsAllocated || 0}</div>
+                                  <div><strong>Validity:</strong> {validity.days || 'N/A'} days</div>
+                                  {validity.expiresAt && (
+                                    <div><strong>Expires At:</strong> {new Date(validity.expiresAt).toLocaleString('en-IN')}</div>
+                                  )}
+                                  {payment.metadata?.planConfig?.features && (
+                                    <div>
+                                      <strong>Features:</strong> {payment.metadata.planConfig.features.join(', ')}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -839,7 +1009,7 @@ const MatchmakingPayuser = () => {
               marginBottom: '20px'
             }}>
               <div style={{ marginBottom: '8px', fontSize: '14px' }}>
-                <strong>User:</strong> {selectedPayment.user?.name || 'N/A'} ({selectedPayment.user?.vivId || selectedPayment.userVivId})
+                <strong>User:</strong> {getUserDisplayName(selectedPayment)} ({getUserVivId(selectedPayment)})
               </div>
               <div style={{ marginBottom: '8px', fontSize: '14px' }}>
                 <strong>Plan:</strong> {selectedPayment.planName || 'N/A'}
