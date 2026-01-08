@@ -39,48 +39,59 @@ export const routes = [
         path: "/home",
         element: <Home />,
       },
+         {
+        icon: <ChatBubbleLeftRightIcon {...icon} />,
+        name: "FAQ Page",
+        path: "/faq",
+        element: <FaqPage />,
+      },
+        {
+        icon: <PencilSquareIcon {...icon} />,
+        name: "Blog Page",
+        path: "/blog",
+        element: <Blog />,
+      },
+       {
+        icon: <EnvelopeIcon {...icon} />,
+        name: "Contact Us",
+        path: "/contact",
+        element: <ContactUs />,
+      },
+        {
+        icon: <StarIcon {...icon} />,
+        name: "Testimonials",
+        path: "/testimonials",
+        element: <TestimonialAdmin />,
+      },
+          {
+        icon: <EnvelopeIcon {...icon} />,
+        name: "Contact Info",
+        path: "/contact-info",
+        element: <ContactInfoManagement />,
+      },
       {
         icon: <UserCircleIcon {...icon} />,
         name: "User Information",
         path: "/userinfo",
         element: <AdminUsersDashboard />,
       },
-      {
-        icon: <UserCircleIcon {...icon} />,
-        name: "Profile",
-        path: "/profile",
-        element: <Profile />,
+      
+      // {
+      //   icon: <UserCircleIcon {...icon} />,
+      //   name: "Profile",
+      //   path: "/profile",
+      //   element: <Profile />,
+      // },
+  
+       {
+        icon: <RectangleStackIcon {...icon} />,
+        name: "Matchmaking Plans",
+        path: "/matchmaking-plans",
+        element: <MatchmakingPlans />,
       },
-      {
-        icon: <UserPlusIcon {...icon} />,
-        name: " Wedding Service User",
-        path: "/WeddingServiceForm",
-        element: <WeddingServiceForm />,
-      },
-      {
-        icon: <StarIcon {...icon} />,
-        name: "Testimonials",
-        path: "/testimonials",
-        element: <TestimonialAdmin />,
-      },
-      {
-        icon: <PencilSquareIcon {...icon} />,
-        name: "Blog Page",
-        path: "/blog",
-        element: <Blog />,
-      },
-      {
-        icon: <ChatBubbleLeftRightIcon {...icon} />,
-        name: "FAQ Page",
-        path: "/faq",
-        element: <FaqPage />,
-      },
-      {
-        icon: <EnvelopeIcon {...icon} />,
-        name: "Contact Us",
-        path: "/contact",
-        element: <ContactUs />,
-      },
+    
+   
+     
       {
         icon: <DocumentIcon {...icon} />,
         name: "Dynamic Form Manager",
@@ -93,18 +104,14 @@ export const routes = [
         path: "/Matchnaking-pay-user",
         element: <MatchmakingPayuser />,
       },
-      {
-        icon: <RectangleStackIcon {...icon} />,
-        name: "Matchmaking Plans",
-        path: "/matchmaking-plans",
-        element: <MatchmakingPlans />,
+          {
+        icon: <UserPlusIcon {...icon} />,
+        name: " Wedding Service User",
+        path: "/WeddingServiceForm",
+        element: <WeddingServiceForm />,
       },
-      {
-        icon: <EnvelopeIcon {...icon} />,
-        name: "Contact Info",
-        path: "/contact-info",
-        element: <ContactInfoManagement />,
-      },
+   
+  
     ],
   },
   {
