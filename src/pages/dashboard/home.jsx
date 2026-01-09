@@ -601,7 +601,7 @@ const PaymentDetailCard = ({ payment }) => {
         <div>
           <label style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600 }}>Amount</label>
           <div style={{ fontSize: '16px', fontWeight: 700, color: '#059669', marginTop: '4px' }}>
-            ₹{payment.payment_amount?.toLocaleString() || '0'}
+            ${payment.payment_amount?.toLocaleString() || '0'}
           </div>
         </div>
         <div>
@@ -1307,13 +1307,13 @@ const Home = () => {
               <div style={{ background: '#fffbeb', padding: '20px', borderRadius: '12px', border: '1px solid #fef3c7' }}>
                 <div style={{ fontSize: '14px', color: '#92400e', fontWeight: 600 }}>Total Revenue</div>
                 <div style={{ fontSize: '24px', fontWeight: 800, color: '#1f2937' }}>
-                  ₹{data?.paymentStats?.totalRevenue?.toLocaleString() || '0'}
+                  ${data?.paymentStats?.totalRevenue?.toLocaleString() || '0'}
                 </div>
               </div>
               <div style={{ background: '#f0f9ff', padding: '20px', borderRadius: '12px', border: '1px solid #bae6fd' }}>
                 <div style={{ fontSize: '14px', color: '#0369a1', fontWeight: 600 }}>Monthly Revenue</div>
                 <div style={{ fontSize: '24px', fontWeight: 800, color: '#1f2937' }}>
-                  ₹{data?.paymentStats?.monthlyRevenue?.toLocaleString() || '0'}
+                  ${data?.paymentStats?.monthlyRevenue?.toLocaleString() || '0'}
                 </div>
               </div>
               <div style={{ background: '#f0fdf4', padding: '20px', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
