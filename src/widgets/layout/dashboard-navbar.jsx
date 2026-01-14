@@ -178,13 +178,13 @@ export function DashboardNavbar() {
               </MenuItem>
             </MenuList>
           </Menu> */}
-          <IconButton
+          {/* <IconButton
             variant="text"
             color="blue-gray"
             onClick={() => setOpenConfigurator(dispatch, true)}
           >
             <Cog6ToothIcon className="h-10 w-10 text-blue-gray-500" />
-          </IconButton>
+          </IconButton> */}
         </div>
       </div>
     </Navbar>

@@ -1608,17 +1608,17 @@ const Home = () => {
               variant="alert" 
               onClick={() => handleCardClick('reportedProfiles')}
             />
-            <QuickActionButton 
+            {/* <QuickActionButton 
               icon={MessageCircle} 
               label="Support Tickets" 
               count={d.adminStats.supportTickets}
               onClick={() => handleCardClick('supportTickets')}
-            />
-            <QuickActionButton 
+            /> */}
+            {/* <QuickActionButton 
               icon={CreditCard} 
               label="Process Payments" 
               onClick={() => navigate('/payments')}
-            />
+            /> */}
           </div>
         </section>
 

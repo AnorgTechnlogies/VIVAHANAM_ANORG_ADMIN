@@ -649,12 +649,12 @@ const FieldsTable = ({ fields, onEdit, onToggleStatus, onDelete }) => {
                 >
                   Edit
                 </button>
-                <button 
+                {/* <button 
                   onClick={() => onToggleStatus(field._id, !field.isActive)} 
                   className="text-orange-600 hover:underline mr-4"
                 >
                   {field.isActive ? 'Deactivate' : 'Activate'}
-                </button>
+                </button> */}
                 <button 
                   onClick={() => onDelete(field._id)} 
                   className="text-red-600 hover:underline"
@@ -1049,7 +1049,7 @@ const AdminDynamicFormManager = () => {
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="mb-10">
-          <h1 className="text-4xl font-bold text-gray-900">Dynamic Form Manager</h1>
+          <h1 className="text-4xl font-bold text-gray-900"> Form Manager</h1>
           <p className="text-gray-600 mt-2">Manage registration form fields & dropdown options</p>
         </div>
 

@@ -488,27 +488,8 @@ const AdminUsersDashboard = () => {
               <option value="Male">Male</option>
               <option value="Female">Female</option>
             </select>
-            <select
-              value={filters.religion}
-              onChange={(e) => setFilters({ ...filters, religion: e.target.value })}
-              className="border-2 border-amber-200 rounded-lg px-4 py-2 focus:border-amber-500 focus:outline-none"
-            >
-              <option value="">All Religions</option>
-              <option value="Hindu">Hindu</option>
-              <option value="Muslim">Muslim</option>
-              <option value="Christian">Christian</option>
-              <option value="Sikh">Sikh</option>
-            </select>
-            <select
-              value={filters.maritalStatus}
-              onChange={(e) => setFilters({ ...filters, maritalStatus: e.target.value })}
-              className="border-2 border-amber-200 rounded-lg px-4 py-2 focus:border-amber-500 focus:outline-none"
-            >
-              <option value="">All Marital Status</option>
-              <option value="Never Married">Never Married</option>
-              <option value="Divorced">Divorced</option>
-              <option value="Widowed">Widowed</option>
-            </select>
+      
+        
             <select
               value={filters.userType}
               onChange={(e) => setFilters({ ...filters, userType: e.target.value })}

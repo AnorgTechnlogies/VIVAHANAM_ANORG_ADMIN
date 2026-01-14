@@ -334,15 +334,15 @@ const MatchmakingPayuser = () => {
   };
 
   // Debug function
-  const debugData = () => {
-    console.log('🔍 All payments:', payments);
-    if (payments.length > 0) {
-      console.log('🔍 First payment:', JSON.stringify(payments[0], null, 2));
-      alert(`Total payments: ${payments.length}\nCheck console for detailed data.`);
-    } else {
-      alert('No payment data available.');
-    }
-  };
+  // const debugData = () => {
+  //   console.log('🔍 All payments:', payments);
+  //   if (payments.length > 0) {
+  //     console.log('🔍 First payment:', JSON.stringify(payments[0], null, 2));
+  //     alert(`Total payments: ${payments.length}\nCheck console for detailed data.`);
+  //   } else {
+  //     alert('No payment data available.');
+  //   }
+  // };
 
   // Loading component
   if (loading && payments.length === 0) {
@@ -376,12 +376,10 @@ const MatchmakingPayuser = () => {
           <h2 style={{ marginBottom: '8px', fontSize: '28px', fontWeight: '700', color: '#111827' }}>
             Matchmaking Plan Purchases
           </h2>
-          <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
-            Manage all user plan purchases and transactions
-          </p>
+        
         </div>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <button
+          {/* <button
             onClick={debugData}
             style={{
               background: '#8b5cf6',
@@ -399,7 +397,7 @@ const MatchmakingPayuser = () => {
           >
             <Eye size={18} />
             Debug
-          </button>
+          </button> */}
           <button
             onClick={() => setShowFilters(!showFilters)}
             style={{
@@ -420,7 +418,7 @@ const MatchmakingPayuser = () => {
             <Filter size={18} />
             Filters
           </button>
-          <button
+          {/* <button
             onClick={fetchPaymentData}
             style={{
               background: '#10b981',
@@ -437,7 +435,7 @@ const MatchmakingPayuser = () => {
             }}
           >
             Refresh
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -999,7 +997,7 @@ const MatchmakingPayuser = () => {
             </div>
 
             <p style={{ marginBottom: '20px', color: '#4b5563', lineHeight: '1.5' }}>
-              Are you sure you want to delete this payment record? This action cannot be undone.
+              Are you sure you want to delete this payment record?
             </p>
             <div style={{
               background: '#fef3c7',

@@ -494,12 +494,6 @@ export default function TestimonialAdmin() {
           icon={StarIcon}
         />
         <StatsCard
-          title="Pending Review"
-          value={pendingCount}
-          color="amber"
-          icon={ClockIcon}
-        />
-        <StatsCard
           title="Approved"
           value={approvedCount}
           color="green"
@@ -518,10 +512,7 @@ export default function TestimonialAdmin() {
             <div>
               <Typography variant="h5" color="blue-gray">
                 Manage Testimonials
-              </Typography>
-              <Typography color="gray" className="mt-1 font-normal">
-                Review, approve, or delete customer testimonials
-              </Typography>
+              </Typography>        
             </div>
 
             <Button

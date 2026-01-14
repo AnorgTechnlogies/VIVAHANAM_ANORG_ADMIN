@@ -401,9 +401,6 @@ const BlogManagement = () => {
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Blog Management
           </h1>
-          <p className="text-lg text-gray-600">
-            Create, edit, and manage blog posts
-          </p>
         </div>
 
         {/* Alert Messages */}
@@ -493,9 +490,9 @@ const BlogManagement = () => {
                   maxLength={500}
                   required
                 />
-                {formData.description.length === 0 && (
+                {/* {formData.description.length === 0 && (
                   <p className="text-red-500 text-sm mt-1">Description is required</p>
-                )}
+                )} */}
               </div>
 
               {/* Date & Time */}
@@ -567,7 +564,7 @@ const BlogManagement = () => {
               </div>
 
               {/* Slug (Auto-generated) */}
-              <div>
+              {/* <div>
                 <label className="block text-gray-700 font-semibold mb-2">
                   Slug (Auto-generated)
                 </label>
@@ -581,7 +578,7 @@ const BlogManagement = () => {
                 {formData.slug.length === 0 && (
                   <p className="text-red-500 text-sm mt-1">Slug will be generated when you enter a title</p>
                 )}
-              </div>
+              </div> */}
 
               {/* Form Actions */}
               <div className="flex gap-3">
