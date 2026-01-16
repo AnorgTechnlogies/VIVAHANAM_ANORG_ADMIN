@@ -394,12 +394,12 @@ const AdminUsersDashboard = () => {
               >
                 Close
               </button>
-              <button
+              {/* <button
                 onClick={() => deleteUser(user._id)}
                 className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
               >
                 Delete
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
@@ -599,7 +599,7 @@ const AdminUsersDashboard = () => {
                             >
                               <Eye className="w-5 h-5" />
                             </button>
-                            <button
+                            {/* <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 deleteUser(user._id);
@@ -608,7 +608,7 @@ const AdminUsersDashboard = () => {
                               title="Delete"
                             >
                               <Trash2 className="w-5 h-5" />
-                            </button>
+                            </button> */}
                           </div>
                         </td>
                       </tr>

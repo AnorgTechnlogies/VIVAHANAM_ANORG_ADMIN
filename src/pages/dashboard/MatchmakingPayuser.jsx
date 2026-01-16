@@ -333,17 +333,6 @@ const MatchmakingPayuser = () => {
     }
   };
 
-  // Debug function
-  // const debugData = () => {
-  //   console.log('🔍 All payments:', payments);
-  //   if (payments.length > 0) {
-  //     console.log('🔍 First payment:', JSON.stringify(payments[0], null, 2));
-  //     alert(`Total payments: ${payments.length}\nCheck console for detailed data.`);
-  //   } else {
-  //     alert('No payment data available.');
-  //   }
-  // };
-
   // Loading component
   if (loading && payments.length === 0) {
     return (

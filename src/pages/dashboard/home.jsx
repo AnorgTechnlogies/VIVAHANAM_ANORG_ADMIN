@@ -1,19 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  TrendingUp, Users, CreditCard, CheckCircle, Clock, Star, Mail, Phone,
-  Calendar, Award, Activity, DollarSign, Eye, Heart, Sparkles, Shield,
-  MessageCircle, UserCheck, AlertTriangle, Search, Filter, Download,
-  Settings, RefreshCw, X, MapPin, BookOpen, GraduationCap, Cake,
-  PhoneCall, MailIcon, Globe, ShieldCheck, EyeOff, FileText, UserX, UserPlus,
-  Wifi, WifiOff, Circle
+  TrendingUp, Users, CreditCard, CheckCircle, Clock, Star, Heart, Sparkles, Shield,
+  MessageCircle, UserCheck, AlertTriangle, Search, RefreshCw, X, MapPin, PhoneCall, MailIcon,
+  Activity, DollarSign, Award, ShieldCheck, Wifi, WifiOff, Circle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 
-
 const BASE_URL = import.meta.env.VITE_API_KEY;
 
-// Enhanced Modal Component with Tabs - Clean UI from second code
+// Enhanced Modal Component with Tabs - Clean UI
 const DetailModal = ({ title, children, onClose, tabs, activeTab, onTabChange }) => {
   return (
     <div style={{
@@ -78,7 +74,7 @@ const DetailModal = ({ title, children, onClose, tabs, activeTab, onTabChange })
   );
 };
 
-// Enhanced New User Popup Component - Clean UI from second code
+// Enhanced New User Popup Component
 const NewUserPopup = ({ user, onClose, onViewDetails, autoClose = true }) => {
   const [visible, setVisible] = useState(true);
 
@@ -120,7 +116,7 @@ const NewUserPopup = ({ user, onClose, onViewDetails, autoClose = true }) => {
           <div style={{
             background: '#d1fae5', padding: '8px', borderRadius: '8px'
           }}>
-            <UserPlus size={20} color="#10b981" />
+            <UserCheck size={20} color="#10b981" />
           </div>
           <div>
             <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#1f2937' }}>
@@ -208,27 +204,23 @@ const NewUserPopup = ({ user, onClose, onViewDetails, autoClose = true }) => {
   );
 };
 
-// Enhanced User Profile Card Component - Clean UI from second code
+// Enhanced User Profile Card Component
 const UserProfileCard = ({ user, onVerify, showVerifyButton = false, showOnlineStatus = false }) => {
   const [expanded, setExpanded] = useState(false);
 
-  // Enhanced online status with real-time data - FIXED LOGIC
+  // Enhanced online status with real-time data
   const isUserOnlineNow = (user) => {
-    // First check if user has explicit online status
     if (user.isOnlineNow || user.onlineStatus === 'online') return true;
     
-    // Check session info
     if (user.sessionInfo && user.sessionInfo.lastActive) {
       const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
       return new Date(user.sessionInfo.lastActive) > twoMinutesAgo;
     }
     
-    // Fallback to last login check
     if (!user.lastLogin) return false;
     const lastLogin = new Date(user.lastLogin);
     const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
     
-    // Also check that user hasn't logged out
     const isNotLoggedOut = !user.lastLogout || new Date(user.lastLogout) < lastLogin;
     
     return lastLogin > twoMinutesAgo && isNotLoggedOut;
@@ -237,7 +229,6 @@ const UserProfileCard = ({ user, onVerify, showVerifyButton = false, showOnlineS
   const isOnlineNow = showOnlineStatus && isUserOnlineNow(user);
   const isCurrentlyActive = user.isCurrentlyActive;
 
-  // Function to get status badge color
   const getStatusBadge = () => {
     if (!user.isVerified) return { text: 'Unverified', color: '#dc2626', bg: '#fef2f2' };
     if (!user.profileCompleted) return { text: 'Incomplete', color: '#d97706', bg: '#fffbeb' };
@@ -565,7 +556,7 @@ const UserProfileCard = ({ user, onVerify, showVerifyButton = false, showOnlineS
   );
 };
 
-// Payment Detail Card Component - Clean UI from second code
+// Payment Detail Card Component
 const PaymentDetailCard = ({ payment }) => {
   return (
     <div style={{
@@ -621,7 +612,7 @@ const PaymentDetailCard = ({ payment }) => {
   );
 };
 
-// Enhanced Stats Card Component - Clean UI from second code
+// Enhanced Stats Card Component
 const ClickableStatCard = ({ title, value, icon: Icon, change, subtitle, alert, onClick, isNew = false, isOnline = false }) => {
   const [hovered, setHovered] = useState(false);
 
@@ -757,7 +748,7 @@ const ClickableStatCard = ({ title, value, icon: Icon, change, subtitle, alert, 
   );
 };
 
-// Quick Action Button Component - Clean UI from second code
+// Quick Action Button Component
 const QuickActionButton = ({ icon: Icon, label, onClick, variant = "primary", count }) => {
   const [hovered, setHovered] = useState(false);
 
@@ -794,7 +785,7 @@ const QuickActionButton = ({ icon: Icon, label, onClick, variant = "primary", co
   );
 };
 
-// Enhanced time formatting function from first code
+// Enhanced time formatting function
 const formatTimeAgo = (date) => {
   if (!date) return 'Never';
   const now = new Date();
@@ -811,7 +802,7 @@ const formatTimeAgo = (date) => {
   return new Date(date).toLocaleDateString();
 };
 
-// Main Home Component - Using first code's functionality with second code's clean UI
+// Main Home Component
 const Home = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -827,7 +818,7 @@ const Home = () => {
   const [refreshInterval, setRefreshInterval] = useState(30000);
   const navigate = useNavigate();
 
-  // Enhanced dashboard fetch with better error handling from first code
+  // Enhanced dashboard fetch with better error handling
   const fetchDashboard = useCallback(async (isBackgroundRefresh = false) => {
     try {
       if (!isBackgroundRefresh) {
@@ -865,10 +856,9 @@ const Home = () => {
     }
   }, [refreshing]);
 
-  // Enhanced new user checking from first code
+  // Enhanced new user checking
   const checkForNewUsers = useCallback(async (currentData) => {
     try {
-      // Fetch only today's new users
       const today = new Date();
       const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       
@@ -879,7 +869,6 @@ const Home = () => {
       const newUsers = res.data.data?.users || [];
       
       if (newUsers.length > 0) {
-        // Show popup for the latest new user
         const latestUser = newUsers[0];
         setNewUserPopup(latestUser);
         
@@ -892,7 +881,7 @@ const Home = () => {
     }
   }, [lastChecked]);
 
-  // Enhanced user fetching with proper filtering for ACTIVE NOW and NEW TODAY - FIXED LOGIC
+  // Enhanced user fetching with proper filtering for ACTIVE NOW and NEW TODAY
   const fetchUsers = useCallback(async (type = 'all') => {
     try {
       setUsersLoading(true);
@@ -913,7 +902,7 @@ const Home = () => {
       
       let fetchedUsers = res.data.data?.users || [];
       
-      // ENHANCED: Filter for newToday specifically to ensure only today's users
+      // Filter for newToday specifically
       if (type === 'newToday') {
         const today = new Date();
         const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -924,15 +913,13 @@ const Home = () => {
         console.log(`📅 Filtered ${fetchedUsers.length} users created today`);
       }
       
-      // ENHANCED: Filter for activeNow - users active in last 2 minutes - FIXED LOGIC
+      // Filter for activeNow - users active in last 2 minutes
       if (type === 'active' || type === 'online') {
         const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
         fetchedUsers = fetchedUsers.filter(user => {
-          // Check if user has active session or last login within 2 minutes
           const hasRecentLogin = user.lastLogin && new Date(user.lastLogin) > twoMinutesAgo;
           const isNotLoggedOut = !user.lastLogout || new Date(user.lastLogout) < new Date(user.lastLogin);
           
-          // Also check if user is marked as online in the data
           const isOnlineInData = user.isOnlineNow || user.onlineStatus === 'online';
           
           return (hasRecentLogin && isNotLoggedOut) || isOnlineInData;
@@ -998,7 +985,7 @@ const Home = () => {
     }
   }, [modal.type, modal.cardType]);
 
-  // Enhanced bulk verification with new endpoint from first code
+  // Enhanced bulk verification
   const bulkVerifyUsers = useCallback(async (userIds) => {
     try {
       const res = await axios.post(`${BASE_URL}/users/bulk-actions`, 
@@ -1047,7 +1034,7 @@ const Home = () => {
     }
   }, [users, bulkVerifyUsers]);
 
-  // Handle new user popup actions from first code
+  // Handle new user popup actions
   const handleViewNewUserDetails = useCallback((user) => {
     setNewUserPopup(null);
     setModal({ 
@@ -1062,7 +1049,7 @@ const Home = () => {
     fetchUsers('newToday');
   }, [data, fetchUsers]);
 
-  // Enhanced auto-refresh system from first code
+  // Enhanced auto-refresh system
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
@@ -1083,7 +1070,7 @@ const Home = () => {
     };
   }, [autoRefresh, refreshInterval, fetchDashboard]);
 
-  // Enhanced modal handlers with proper card type detection - FIXED LOGIC
+  // Enhanced modal handlers with proper card type detection
   const handleCardClick = useCallback(async (cardType) => {
     let modalData = { type: 'users', cardType };
     
@@ -1114,25 +1101,12 @@ const Home = () => {
           { id: 'pending', label: 'Profile Incompleted', count: data?.adminStats?.pendingVerifications }
         ];
         break;
-      case 'reportedProfiles':
-        modalData.type = 'verifications';
-        modalData.tabs = [
-          { id: 'reported', label: 'Reported Profiles', count: data?.adminStats?.reportedProfiles }
-        ];
-        break;
       case 'totalRevenue':
       case 'monthlyRevenue':
         modalData.type = 'revenue';
         modalData.tabs = [
           { id: 'overview', label: 'Revenue Overview' },
           { id: 'payments', label: 'Recent Payments', count: data?.recentPayments?.length }
-        ];
-        break;
-      case 'supportTickets':
-        modalData.type = 'support';
-        modalData.tabs = [
-          { id: 'tickets', label: 'Support Tickets', count: data?.adminStats?.supportTickets },
-          { id: 'contacts', label: 'Contact Submissions', count: data?.contactSubmissions?.length }
         ];
         break;
       default:
@@ -1145,10 +1119,9 @@ const Home = () => {
     setActiveTab(modalData.tabs?.[0]?.id || 'all');
     
     if (modalData.type === 'users') {
-      // Use the correct type for fetching - FIXED
       let fetchType = modalData.cardType;
       if (modalData.cardType === 'activeNow') {
-        fetchType = 'online'; // Use 'online' type for activeNow card
+        fetchType = 'online';
       }
       await fetchUsers(fetchType);
     } else if (modalData.type === 'verifications') {
@@ -1163,7 +1136,6 @@ const Home = () => {
     }
   }, [modal.type, fetchUsers]);
 
-  // Render modal content from first code - ENHANCED WITH ONLINE STATUS
   const renderModalContent = () => {
     if (!modal.open) return null;
 
@@ -1174,8 +1146,6 @@ const Home = () => {
         return renderRevenueContent();
       case 'verifications':
         return renderVerificationsContent();
-      case 'support':
-        return renderSupportContent();
       default:
         return <div>Content not available</div>;
     }
@@ -1216,7 +1186,7 @@ const Home = () => {
 
     const showOnlineStatus = modal.cardType === 'activeNow';
 
-    // Enhanced: Count actual online users
+    // Count actual online users
     const onlineUsersCount = users.filter(user => {
       const isOnlineNow = showOnlineStatus && (
         user.isOnlineNow || 
@@ -1417,57 +1387,6 @@ const Home = () => {
     );
   };
 
-  const renderSupportContent = () => {
-    return (
-      <div>
-        {activeTab === 'tickets' ? (
-          <div style={{ textAlign: 'center', padding: '40px 20px', color: '#6b7280' }}>
-            <MessageCircle size={48} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
-            <h3>Support Tickets</h3>
-            <p>Support ticket system coming soon.</p>
-          </div>
-        ) : (
-          <div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '16px' }}>Recent Contact Submissions</h3>
-            {data?.contactSubmissions?.length > 0 ? (
-              data.contactSubmissions.map(contact => (
-                <div key={contact.id} style={{
-                  background: 'white', border: '1px solid #f3f4f6', borderRadius: '12px',
-                  padding: '20px', marginBottom: '16px'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                    <div>
-                      <h4 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 4px 0' }}>{contact.name}</h4>
-                      <div style={{ fontSize: '14px', color: '#6b7280' }}>{contact.email}</div>
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#9ca3af' }}>
-                      {contact.submittedAt ? new Date(contact.submittedAt).toLocaleDateString() : 'Unknown Date'}
-                    </div>
-                  </div>
-                  <div style={{ fontSize: '14px', lineHeight: '1.5', color: '#4b5563' }}>
-                    {contact.fullMessage || contact.message || 'No message provided'}
-                  </div>
-                  {contact.phone && (
-                    <div style={{ marginTop: '8px', fontSize: '14px', color: '#6b7280' }}>
-                      <Phone size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                      {contact.phone}
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div style={{ textAlign: 'center', padding: '40px 20px', color: '#6b7280' }}>
-                <Mail size={48} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
-                <h3>No contact submissions</h3>
-                <p>There are no recent contact form submissions.</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#fff' }}>
@@ -1497,16 +1416,15 @@ const Home = () => {
   const d = data || {
     userStats: { totalUsers: 0, premiumUsers: 0, activeNow: 0, newToday: 0, realTimeOnline: 0 },
     paymentStats: { totalRevenue: 0, monthlyRevenue: 0, successfulPayments: 0 },
-    adminStats: { pendingVerifications: 0, reportedProfiles: 0, supportTickets: 0 },
+    adminStats: { pendingVerifications: 0 },
     recentPayments: [],
     planDistribution: {},
-    recentTestimonials: [],
-    contactSubmissions: []
+    recentTestimonials: []
   };
 
   return (
     <div style={{ minHeight: '100vh', background: 'white', fontFamily: '"Inter", sans-serif' }}>
-      {/* Header - Clean UI from second code */}
+      {/* Header */}
       <div style={{
         background: 'white', padding: '16px 30px', borderBottom: '2px solid #fffbeb',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -1572,7 +1490,7 @@ const Home = () => {
             border: '2px solid #fef3c7', display: 'flex', alignItems: 'center',
             justifyContent: 'center', cursor: 'pointer'
           }}>
-            <Settings size={18} color="#f59e0b" />
+            <Shield size={18} color="#f59e0b" />
           </div>
         </div>
       </div>
@@ -1588,7 +1506,7 @@ const Home = () => {
           </p>
         </div>
 
-        {/* Quick Actions - Clean UI from second code */}
+        {/* Quick Actions */}
         <section style={{ marginBottom: '32px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Sparkles size={18} color="#f59e0b" /> Quick Actions
@@ -1601,28 +1519,10 @@ const Home = () => {
               variant={d.adminStats.pendingVerifications > 0 ? "alert" : "primary"} 
               onClick={() => handleCardClick('pendingVerifications')}
             />
-            <QuickActionButton 
-              icon={AlertTriangle} 
-              label="Reported Profiles" 
-              count={d.adminStats.reportedProfiles}
-              variant="alert" 
-              onClick={() => handleCardClick('reportedProfiles')}
-            />
-            {/* <QuickActionButton 
-              icon={MessageCircle} 
-              label="Support Tickets" 
-              count={d.adminStats.supportTickets}
-              onClick={() => handleCardClick('supportTickets')}
-            /> */}
-            {/* <QuickActionButton 
-              icon={CreditCard} 
-              label="Process Payments" 
-              onClick={() => navigate('/payments')}
-            /> */}
           </div>
         </section>
 
-        {/* Stats Grid - Clean UI from second code */}
+        {/* Stats Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '32px' }}>
           <div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '24px' }}>
@@ -1667,13 +1567,6 @@ const Home = () => {
                 alert={d.adminStats.pendingVerifications > 0}
                 onClick={() => handleCardClick('pendingVerifications')}
               />
-              <ClickableStatCard 
-                title="Reported Profiles" 
-                value={d.adminStats.reportedProfiles} 
-                icon={AlertTriangle} 
-                alert={d.adminStats.reportedProfiles > 0}
-                onClick={() => handleCardClick('reportedProfiles')}
-              />
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -1693,200 +1586,192 @@ const Home = () => {
               onClick={() => handleCardClick('newToday')}
               isNew={d.userStats.newToday > 0}
             />
-            <ClickableStatCard 
-              title="Support Tickets" 
-              value={d.adminStats.supportTickets} 
-              icon={MessageCircle} 
-              subtitle="Pending responses" 
-              onClick={() => handleCardClick('supportTickets')}
-            />
           </div>
         </div>
 
-        {/* Main Content - Clean UI from second code */}
-        {/* Main Content - Clean UI from second code */}
-<div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '24px', alignItems: 'start' }}>
-  {/* Recent Payments - Updated with scroll */}
-  <div style={{ 
-    background: 'white', 
-    borderRadius: '16px', 
-    padding: '24px', 
-    boxShadow: '0 2px 12px rgba(0,0,0,0.08)', 
-    border: '1px solid #f3f4f6',
-    height: '500px', // Fixed height for scrollable area
-    display: 'flex',
-    flexDirection: 'column'
-  }}>
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'space-between', 
-      alignItems: 'center', 
-      marginBottom: '20px',
-      flexShrink: 0 // Prevent header from shrinking
-    }}>
-      <h3 style={{ fontSize: '18px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <CreditCard size={20} color="#f59e0b" /> Recent Payments
-      </h3>
-      <button 
-        onClick={() => handleCardClick('totalRevenue')}
-        style={{
-          padding: '8px 16px', 
-          background: '#fffbeb', 
-          border: '1px solid #fef3c7',
-          borderRadius: '8px', 
-          color: '#92400e', 
-          fontWeight: 600, 
-          cursor: 'pointer',
-          fontSize: '12px'
-        }}
-      >
-        View All
-      </button>
-    </div>
-    
-    {/* Scrollable payments container */}
-    <div style={{ 
-      flex: 1, 
-      overflowY: 'auto',
-      paddingRight: '8px'
-    }}>
-      {d.recentPayments?.length > 0 ? (
-        d.recentPayments.map((p) => (
-          <PaymentDetailCard key={p.id} payment={p} />
-        ))
-      ) : (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '40px 20px', 
-          color: '#6b7280',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
-          <CreditCard size={48} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
-          <p>No recent payments</p>
-        </div>
-      )}
-    </div>
-  </div>
-
-  {/* Sidebar - Make this section scrollable too if needed */}
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-    {/* Success Stories */}
-    <div style={{ background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
-      <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Heart size={20} color="#f59e0b" /> Latest Success Stories
-      </h3>
-      {d.recentTestimonials?.length > 0 ? (
-        d.recentTestimonials.map((t) => (
-          <div 
-            key={t.id} 
-            style={{ 
-              padding: '12px 0', 
-              borderBottom: '1px solid #f3f4f6',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onClick={() => navigate('/testimonials')}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#fffbeb';
-              e.currentTarget.style.paddingLeft = '8px';
-              e.currentTarget.style.paddingRight = '8px';
-              e.currentTarget.style.marginLeft = '-8px';
-              e.currentTarget.style.marginRight = '-8px';
-              e.currentTarget.style.borderRadius = '8px';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.paddingLeft = '0';
-              e.currentTarget.style.paddingRight = '0';
-              e.currentTarget.style.marginLeft = '0';
-              e.currentTarget.style.marginRight = '0';
-              e.currentTarget.style.borderRadius = '0';
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <strong style={{ fontSize: '14px' }}>{t.name}</strong>
-              <div>{[...Array(5)].map((_, i) => <Star key={i} size={14} fill={i < (t.rating || 5) ? '#f59e0b' : '#e5e7eb'} color="#f59e0b" />)}</div>
-            </div>
-            <p style={{ 
-              fontSize: '13px', 
-              color: '#6b7280', 
-              margin: '8px 0',
-              wordWrap: 'break-word',
-              overflowWrap: 'break-word',
-              whiteSpace: 'normal',
-              lineHeight: '1.4'
-            }}>{t.message}</p>
-            <small style={{ color: '#9ca3af' }}>Married on {t.weddingDate || 'Unknown Date'}</small>
-          </div>
-        ))
-      ) : (
-        <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
-          <Heart size={32} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
-          <p>No success stories yet</p>
-        </div>
-      )}
-    </div>
-
-    {/* Plan Distribution */}
-    <div style={{ background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
-      <h4 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>
-        <Award size={18} color="#f59e0b" style={{ display: 'inline', marginRight: '8px' }} />
-        Active Plan Distribution
-      </h4>
-      {Object.entries(d.planDistribution).length > 0 ? (
-        Object.entries(d.planDistribution).map(([plan, count]) => {
-          const total = Object.values(d.planDistribution).reduce((a, b) => a + b, 0);
-          const percent = Math.round((count / total) * 100);
-          return (
-            <div 
-              key={plan} 
-              style={{ 
-                marginBottom: '12px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onClick={() => navigate(`/userinfo?plan=${plan}`)}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateX(8px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateX(0)';
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ 
-                  padding: '4px 8px', 
+        {/* Main Content */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '24px', alignItems: 'start' }}>
+          {/* Recent Payments */}
+          <div style={{ 
+            background: 'white', 
+            borderRadius: '16px', 
+            padding: '24px', 
+            boxShadow: '0 2px 12px rgba(0,0,0,0.08)', 
+            border: '1px solid #f3f4f6',
+            height: '500px',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              marginBottom: '20px',
+              flexShrink: 0
+            }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CreditCard size={20} color="#f59e0b" /> Recent Payments
+              </h3>
+              <button 
+                onClick={() => handleCardClick('totalRevenue')}
+                style={{
+                  padding: '8px 16px', 
                   background: '#fffbeb', 
-                  color: '#92400e',
-                  borderRadius: '6px', 
-                  fontSize: '11px', 
-                  fontWeight: 700,
-                  wordWrap: 'break-word',
-                  maxWidth: '70%'
-                }}>
-                  {plan}
-                </span>
-                <span style={{ fontWeight: 600, fontSize: '12px' }}>{count} ({percent}%)</span>
-              </div>
-              <div style={{ height: '6px', background: '#f3f4f6', borderRadius: '3px', overflow: 'hidden' }}>
-                <div style={{ width: `${percent}%`, height: '100%', background: 'linear-gradient(90deg, #f59e0b, #fbbf24)', borderRadius: '3px' }} />
-              </div>
+                  border: '1px solid #fef3c7',
+                  borderRadius: '8px', 
+                  color: '#92400e', 
+                  fontWeight: 600, 
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                View All
+              </button>
             </div>
-          );
-        })
-      ) : (
-        <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
-          <Award size={32} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
-          <p>No plan data available</p>
+            
+            {/* Scrollable payments container */}
+            <div style={{ 
+              flex: 1, 
+              overflowY: 'auto',
+              paddingRight: '8px'
+            }}>
+              {d.recentPayments?.length > 0 ? (
+                d.recentPayments.map((p) => (
+                  <PaymentDetailCard key={p.id} payment={p} />
+                ))
+              ) : (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '40px 20px', 
+                  color: '#6b7280',
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}>
+                  <CreditCard size={48} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
+                  <p>No recent payments</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Success Stories */}
+            <div style={{ background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Heart size={20} color="#f59e0b" /> Latest Success Stories
+              </h3>
+              {d.recentTestimonials?.length > 0 ? (
+                d.recentTestimonials.map((t) => (
+                  <div 
+                    key={t.id} 
+                    style={{ 
+                      padding: '12px 0', 
+                      borderBottom: '1px solid #f3f4f6',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onClick={() => navigate('/testimonials')}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#fffbeb';
+                      e.currentTarget.style.paddingLeft = '8px';
+                      e.currentTarget.style.paddingRight = '8px';
+                      e.currentTarget.style.marginLeft = '-8px';
+                      e.currentTarget.style.marginRight = '-8px';
+                      e.currentTarget.style.borderRadius = '8px';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.paddingLeft = '0';
+                      e.currentTarget.style.paddingRight = '0';
+                      e.currentTarget.style.marginLeft = '0';
+                      e.currentTarget.style.marginRight = '0';
+                      e.currentTarget.style.borderRadius = '0';
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <strong style={{ fontSize: '14px' }}>{t.name}</strong>
+                      <div>{[...Array(5)].map((_, i) => <Star key={i} size={14} fill={i < (t.rating || 5) ? '#f59e0b' : '#e5e7eb'} color="#f59e0b" />)}</div>
+                    </div>
+                    <p style={{ 
+                      fontSize: '13px', 
+                      color: '#6b7280', 
+                      margin: '8px 0',
+                      wordWrap: 'break-word',
+                      overflowWrap: 'break-word',
+                      whiteSpace: 'normal',
+                      lineHeight: '1.4'
+                    }}>{t.message}</p>
+                    <small style={{ color: '#9ca3af' }}>Married on {t.weddingDate || 'Unknown Date'}</small>
+                  </div>
+                ))
+              ) : (
+                <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+                  <Heart size={32} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
+                  <p>No success stories yet</p>
+                </div>
+              )}
+            </div>
+
+            {/* Plan Distribution */}
+            <div style={{ background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
+              <h4 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>
+                <Award size={18} color="#f59e0b" style={{ display: 'inline', marginRight: '8px' }} />
+                Active Plan Distribution
+              </h4>
+              {Object.entries(d.planDistribution).length > 0 ? (
+                Object.entries(d.planDistribution).map(([plan, count]) => {
+                  const total = Object.values(d.planDistribution).reduce((a, b) => a + b, 0);
+                  const percent = Math.round((count / total) * 100);
+                  return (
+                    <div 
+                      key={plan} 
+                      style={{ 
+                        marginBottom: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onClick={() => navigate(`/userinfo?plan=${plan}`)}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateX(8px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateX(0)';
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{ 
+                          padding: '4px 8px', 
+                          background: '#fffbeb', 
+                          color: '#92400e',
+                          borderRadius: '6px', 
+                          fontSize: '11px', 
+                          fontWeight: 700,
+                          wordWrap: 'break-word',
+                          maxWidth: '70%'
+                        }}>
+                          {plan}
+                        </span>
+                        <span style={{ fontWeight: 600, fontSize: '12px' }}>{count} ({percent}%)</span>
+                      </div>
+                      <div style={{ height: '6px', background: '#f3f4f6', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div style={{ width: `${percent}%`, height: '100%', background: 'linear-gradient(90deg, #f59e0b, #fbbf24)', borderRadius: '3px' }} />
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+                  <Award size={32} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
+                  <p>No plan data available</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      )}
-    </div>
-  </div>
-</div>
       </div>
 
       {/* Enhanced Modal */}
@@ -1895,8 +1780,7 @@ const Home = () => {
           title={
             modal.type === 'users' ? 'User Management' :
             modal.type === 'revenue' ? 'Revenue Analytics' :
-            modal.type === 'verifications' ? 'Verification Center' :
-            modal.type === 'support' ? 'Support Center' : 'Details'
+            modal.type === 'verifications' ? 'Verification Center' : 'Details'
           }
           onClose={() => setModal({ open: false, type: null, data: null })}
           tabs={modal.tabs}
