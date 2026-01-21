@@ -912,29 +912,161 @@ const AdminDynamicFormManager = () => {
     loadData();
   }, []);
 
-  const handleFieldSubmit = async (data) => {
-    setLoading(true);
-    try {
-      const url = editingField ? `${BASE_URL}/form-fields/${editingField._id}` : `${BASE_URL}/form-fields`;
-      const method = editingField ? 'PUT' : 'POST';
-      const res = await fetchWithAuth(url, { method, body: JSON.stringify(data) });
-      if (res.success) {
+const handleFieldSubmit = async (data) => {
+  setLoading(true);
+  setError(null);
+  try {
+    console.log('📝 Field submit data:', data);
+    console.log('✏️ Editing field:', editingField);
+    
+    // Check if field type is changing
+    const isTypeChanging = editingField && editingField.type !== data.type;
+    
+    if (isTypeChanging) {
+      console.log(`🔄 Field type change detected: ${editingField.type} → ${data.type}`);
+      
+      // Show detailed warning dialog
+      const userConfirmed = window.confirm(
+        `⚠️ FIELD TYPE CHANGE WARNING\n\n` +
+        `Field: ${editingField.label || editingField.name}\n` +
+        `Current Type: ${editingField.type}\n` +
+        `New Type: ${data.type}\n\n` +
+        `IMPORTANT: This will automatically migrate ALL existing user data for this field.\n\n` +
+        `What will happen:\n` +
+        `✅ All users' data will be converted\n` +
+        `✅ Form caches will be cleared\n` +
+        `✅ Frontend will update immediately\n\n` +
+        `⚠️ This action is IRREVERSIBLE\n\n` +
+        `Do you want to continue?`
+      );
+      
+      if (!userConfirmed) {
+        console.log('❌ User cancelled type change');
+        setLoading(false);
+        return;
+      }
+      
+      // Call MIGRATION endpoint for type change
+      console.log('🚀 Calling migration endpoint...');
+      const migrationRes = await fetchWithAuth(
+        `${BASE_URL}/form-fields/${editingField._id}/migrate-type`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            newType: data.type,
+            oldType: editingField.type,
+            fieldName: data.name || editingField.name
+          })
+        }
+      );
+      
+      console.log('📦 Migration response:', migrationRes);
+      
+      if (migrationRes.success) {
+        // Success - close modal and refresh
         setShowFieldForm(false);
         setEditingField(null);
-        await loadData(); // Wait for admin data to reload
+        
+        // Refresh admin data
+        await loadData();
         
         // Clear frontend cache and refresh forms
         await clearFrontendCache();
         await refreshFrontendForms();
         
-        alert('Field saved successfully! Frontend forms will update immediately.');
+        // Show detailed success message
+        const migrationData = migrationRes.data?.migration;
+        const message = migrationData 
+          ? `✅ Field type changed successfully!\n\n` +
+            `Migration Report:\n` +
+            `• Total Users with this field: ${migrationData.totalUsers || 0}\n` +
+            `• Successfully migrated: ${migrationData.migrated || 0}\n` +
+            `• Failed migrations: ${migrationData.failed || 0}\n\n` +
+            `All user data has been automatically converted.\n` +
+            `Frontend forms will update immediately.`
+          : `✅ Field type changed successfully!`;
+        
+        alert(message);
+        
+        // Log to console for debugging
+        console.log('✅ Type change successful:', {
+          field: editingField.name,
+          oldType: editingField.type,
+          newType: data.type,
+          migration: migrationData
+        });
+        
+      } else {
+        throw new Error(migrationRes.message || 'Migration failed');
       }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      
+    } else {
+      // NORMAL field update (no type change)
+      console.log('📝 Normal field update (no type change)');
+      
+      const url = editingField 
+        ? `${BASE_URL}/form-fields/${editingField._id}` 
+        : `${BASE_URL}/form-fields`;
+      
+      const method = editingField ? 'PUT' : 'POST';
+      
+      console.log('🌐 API call:', { url, method });
+      
+      const res = await fetchWithAuth(url, {
+        method,
+        body: JSON.stringify(data)
+      });
+      
+      console.log('📦 API response:', res);
+      
+      if (res.success) {
+        // Success - close modal and refresh
+        setShowFieldForm(false);
+        setEditingField(null);
+        
+        // Refresh admin data
+        await loadData();
+        
+        // Clear frontend cache and refresh forms
+        await clearFrontendCache();
+        await refreshFrontendForms();
+        
+        alert(`✅ ${editingField ? 'Field updated' : 'Field created'} successfully!\n\nFrontend forms will update immediately.`);
+        
+        console.log('✅ Field saved successfully');
+        
+      } else {
+        throw new Error(res.message || 'Failed to save field');
+      }
     }
-  };
+    
+  } catch (err) {
+    console.error('❌ Field save error:', err);
+    
+    // Show user-friendly error message
+    let errorMessage = 'Failed to save field';
+    
+    if (err.message.includes('Network')) {
+      errorMessage = 'Network error. Please check your connection.';
+    } else if (err.message.includes('401') || err.message.includes('403')) {
+      errorMessage = 'Authentication error. Please login again.';
+    } else if (err.message.includes('404')) {
+      errorMessage = 'Field not found. Please refresh and try again.';
+    } else if (err.message.includes('500')) {
+      errorMessage = 'Server error. Please try again later.';
+    } else {
+      errorMessage = err.message;
+    }
+    
+    setError(errorMessage);
+    
+    // Also show alert for immediate feedback
+    alert(`❌ Error: ${errorMessage}`);
+    
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDatalistSubmit = async (data) => {
     setLoading(true);
