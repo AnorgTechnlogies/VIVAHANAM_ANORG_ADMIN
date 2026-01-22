@@ -6,7 +6,9 @@ import {
   Loader2, AlertCircle, ChevronLeft, ChevronRight, User
 } from 'lucide-react';
 
-const API_BASE_URL = "http://localhost:8000/api";
+// const API_BASE_URL = "http://localhost:8000/api";
+const BASE_URL = import.meta.env.VITE_API_KEY;
+
 
 const MatchmakingPayuser = () => {
   const [payments, setPayments] = useState([]);
@@ -76,7 +78,7 @@ const MatchmakingPayuser = () => {
       if (filters.month) params.append('month', filters.month);
       if (filters.vivId) params.append('vivId', filters.vivId);
 
-      const url = `${API_BASE_URL}/payment/plan-purchases?${params.toString()}`;
+      const url = `${BASE_URL}/plan-purchases?${params.toString()}`;
       console.log('🔍 Fetching from URL:', url);
 
       const response = await axios.get(url, {
@@ -231,7 +233,7 @@ const MatchmakingPayuser = () => {
         return;
       }
 
-      const url = `${API_BASE_URL}/payment/${selectedPayment._id}`;
+      const url = `${BASE_URL}/${selectedPayment._id}`;
       const response = await axios.delete(url, {
         headers: { 
           Authorization: `Bearer ${token}`,
@@ -269,7 +271,7 @@ const MatchmakingPayuser = () => {
         return;
       }
 
-      const url = `${API_BASE_URL}/payment/pdf/${transactionId}`;
+      const url = `${BASE_URL}/pdf/${transactionId}`;
       const response = await axios.get(url, {
         headers: { 
           Authorization: `Bearer ${token}`,
