@@ -1435,23 +1435,7 @@ const Home = () => {
             <Shield size={28} color="#f59e0b" />
             <span style={{ fontSize: '20px', fontWeight: 800, color: '#1f2937' }}>MatrimonyAdmin</span>
           </div>
-          <div style={{
-            display: 'flex', gap: '8px', background: '#f9fafb', padding: '8px 12px',
-            borderRadius: '10px', alignItems: 'center', minWidth: '300px'
-          }}>
-            <Search size={16} color="#6b7280" />
-            <input 
-              type="text" 
-              placeholder="Search anything..." 
-              style={{ 
-                border: 'none', 
-                background: 'transparent', 
-                outline: 'none', 
-                width: '100%',
-                fontSize: '14px'
-              }} 
-            />
-          </div>
+          
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {/* Auto-refresh toggle */}

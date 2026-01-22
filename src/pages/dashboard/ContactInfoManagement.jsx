@@ -460,11 +460,11 @@ const ContactInfoManagement = () => {
               <div className="border-b">
                 <div className="flex gap-2 p-4">
                   <TabButton tab="basic" icon={Phone}>Basic Info</TabButton>
-                  <TabButton tab="additional" icon={Users}>Additional Contacts</TabButton>
-                  <TabButton tab="address" icon={MapPin}>Address</TabButton>
-                  <TabButton tab="hours" icon={Clock}>Working Hours</TabButton>
+                  {/* <TabButton tab="additional" icon={Users}>Additional Contacts</TabButton> */}
+                  {/* <TabButton tab="address" icon={MapPin}>Address</TabButton> */}
+                  {/* <TabButton tab="hours" icon={Clock}>Working Hours</TabButton> */}
                   <TabButton tab="social" icon={Globe}>Social Media</TabButton>
-                  <TabButton tab="support" icon={MessageCircle}>Support</TabButton>
+                  {/* <TabButton tab="support" icon={MessageCircle}>Support</TabButton> */}
                 </div>
               </div>
 
